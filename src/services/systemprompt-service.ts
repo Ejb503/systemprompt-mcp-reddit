@@ -2,7 +2,6 @@ import { sendJsonResultNotification } from "../handlers/notifications.js";
 import type {
   SystempromptPromptResponse,
   SystempromptBlockResponse,
-  SystempromptAgentResponse,
   SystempromptUserStatusResponse,
   SystempromptBlockRequest,
 } from "../types/systemprompt.js";
@@ -116,8 +115,8 @@ export class SystemPromptService {
     });
   }
 
-  public async getBlock<T = unknown>(blockId: string): Promise<SystempromptBlockResponse<T>> {
-    const response = await this.request<SystempromptBlockResponse<T>>(
+  public async getBlock(blockId: string): Promise<SystempromptBlockResponse> {
+    const response = await this.request<SystempromptBlockResponse>(
       "GET",
       `/block/${blockId}?t=${Date.now()}`,
     );
@@ -147,16 +146,14 @@ export class SystemPromptService {
     return this.request<SystempromptBlockResponse>("PATCH", `/block/${id}`, block);
   }
 
-  public async upsertBlock<T = unknown>(
-    block: SystempromptBlockRequest<T>,
-  ): Promise<SystempromptBlockResponse<T>> {
+  public async upsertBlock(block: SystempromptBlockRequest): Promise<SystempromptBlockResponse> {
     try {
       // First try to find existing blocks with matching prefix and tag
       const existingBlocks = await this.listBlocks({
         tags: block.metadata.tag,
       });
 
-      // Find the most recently updated block with matching prefix
+      // Find the most recent block with matching prefix only
       const existingBlock = existingBlocks
         .filter((b) => b.prefix === block.prefix)
         .sort((a, b) => {
@@ -166,21 +163,31 @@ export class SystemPromptService {
         })[0];
 
       if (existingBlock) {
-        try {
-          // Update existing block
-          return await this.request<SystempromptBlockResponse<T>>(
-            "PUT",
-            `/block/${existingBlock.id}`,
-            block,
-          );
-        } catch (error) {
-          console.error("Failed to update block, falling back to create:", error);
-          return await this.request<SystempromptBlockResponse<T>>("POST", "/block", block);
-        }
+        // Update existing block with new content but preserve the ID
+        const updatedBlock = {
+          ...block,
+          id: existingBlock.id,
+          metadata: {
+            ...block.metadata,
+          },
+        };
+
+        return await this.request<SystempromptBlockResponse>(
+          "PATCH",
+          `/block/${existingBlock.id}`,
+          updatedBlock,
+        );
       }
 
       // If no existing block found, create new one
-      return await this.request<SystempromptBlockResponse<T>>("POST", "/block", block);
+      const newBlock = {
+        ...block,
+        metadata: {
+          ...block.metadata,
+        },
+      };
+
+      return await this.request<SystempromptBlockResponse>("POST", "/block", newBlock);
     } catch (error) {
       console.error("Error in upsertBlock:", error);
       throw new Error(

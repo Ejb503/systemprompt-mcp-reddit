@@ -136,3 +136,50 @@ export const DRAFT_EMAIL_RESPONSE_SCHEMA: JSONSchema7 = {
   },
   required: ["to", "subject", "body"],
 };
+
+export const REDDIT_POST_RESPONSE_SCHEMA: JSONSchema7 = {
+  type: "object",
+  properties: {
+    title: {
+      type: "string",
+      description: "Generated title for the post",
+    },
+    content: {
+      type: "string",
+      description: "Generated content for the post",
+    },
+    kind: {
+      type: "string",
+      enum: ["text", "link"],
+      description: "Type of post",
+    },
+    subreddit: {
+      type: "string",
+      description: "Subreddit to post to",
+    },
+    url: {
+      type: "string",
+      description: "URL for link posts",
+    },
+  },
+  required: ["title", "content", "kind", "subreddit"],
+};
+
+export const REDDIT_REPLY_RESPONSE_SCHEMA: JSONSchema7 = {
+  type: "object",
+  properties: {
+    content: {
+      type: "string",
+      description: "Generated content for the reply",
+    },
+    subreddit: {
+      type: "string",
+      description: "Subreddit context",
+    },
+    messageId: {
+      type: "string",
+      description: "ID of message being replied to",
+    },
+  },
+  required: ["content", "subreddit", "messageId"],
+};

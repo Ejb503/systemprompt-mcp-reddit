@@ -10,9 +10,9 @@ export interface SystempromptBlockMetadata {
   status?: string;
 }
 
-export interface SystempromptBlockRequest<T = unknown> {
-  content: T;
-  type: string;
+export interface SystempromptBlockRequest {
+  content: string;
+  type: "block";
   prefix: string;
   metadata: SystempromptBlockMetadata;
 }
@@ -22,10 +22,10 @@ export interface SystempromptAgentRequest {
   metadata: Partial<Metadata>;
 }
 
-export interface SystempromptBlockResponse<T = unknown> {
+export interface SystempromptBlockResponse {
   id: string;
   type: string;
-  content: T;
+  content: string;
   prefix: string;
   metadata: SystempromptBlockMetadata;
   _link?: string;

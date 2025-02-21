@@ -52,3 +52,16 @@ export interface RedditInstructionConfig {
   expertise?: string[];
   backgroundContext?: string;
 }
+
+export interface CreateRedditPostArgs {
+  subreddit: string;
+  content: string;
+  kind?: "text" | "link";
+  url?: string;
+}
+
+export interface CreateRedditReplyArgs {
+  subreddit: string;
+  messageId: string;
+  content: string;
+}

@@ -1,33 +1,32 @@
 import { SamplingPrompt } from "../types/sampling.js";
-import { EMAIL_SEND_INSTRUCTIONS } from "./instructions.js";
 import {
-  EMAIL_SEND_RESPONSE_SCHEMA,
-  EMAIL_REPLY_RESPONSE_SCHEMA,
-  DRAFT_EMAIL_RESPONSE_SCHEMA,
+  REDDIT_POST_RESPONSE_SCHEMA,
+  REDDIT_REPLY_RESPONSE_SCHEMA,
 } from "../types/sampling-schemas.js";
 
-const promptArgs = [
-  {
-    name: "userInstructions",
-    description: "Instructions for the email operation",
-    required: true,
-  },
-];
-
-// Email Send Prompt
-export const SEND_EMAIL_PROMPT: SamplingPrompt = {
-  name: "gmail_send_email",
-  description: "Sends an email or reply based on user instructions",
+// Add these prompts
+export const CREATE_REDDIT_POST_PROMPT: SamplingPrompt = {
+  name: "reddit_create_post",
+  description: "Creates high-quality, engaging content for a Reddit post",
   arguments: [
-    ...promptArgs,
     {
-      name: "to",
-      description: "Recipient email address(es)",
+      name: "subreddit",
+      description: "Subreddit to post to",
       required: true,
     },
     {
-      name: "messageId",
-      description: "Optional message ID to reply to",
+      name: "content",
+      description: "Instructions for generating the post",
+      required: true,
+    },
+    {
+      name: "kind",
+      description: "Type of post (text or link)",
+      required: false,
+    },
+    {
+      name: "url",
+      description: "URL for link posts",
       required: false,
     },
   ],
@@ -36,174 +35,68 @@ export const SEND_EMAIL_PROMPT: SamplingPrompt = {
       role: "assistant",
       content: {
         type: "text",
-        text: EMAIL_SEND_INSTRUCTIONS,
+        text: "You are an expert Reddit content creator who deeply understands Reddit culture, subreddit-specific norms, and how to create engaging, valuable content. Your posts are well-researched, thoughtfully crafted, and designed to spark meaningful discussions.",
+      },
+    },
+    {
+      role: "assistant",
+      content: {
+        type: "text",
+        text: "I understand the subreddit rules and posting guidelines:\n{{redditConfig}}",
+      },
+    },
+    {
+      role: "assistant",
+      content: {
+        type: "text",
+        text: "I must follow these content creation instructions:\n{{redditInstructions}}",
       },
     },
     {
       role: "user",
       content: {
         type: "text",
-        text: `<input>
-          <userInstructions>{{userInstructions}}</userInstructions>
-          <to>{{to}}</to>
-          {{#messageId}}<replyTo>{{messageId}}</replyTo>{{/messageId}}
-        </input>`,
+        text: `Create a Reddit post following these parameters:
+        
+Subreddit: {{subreddit}}
+Post Type: {{kind}}
+{{#url}}URL: {{url}}{{/url}}
+
+Content Instructions: {{content}}
+
+Ensure the post:
+- Follows all subreddit rules and guidelines
+- Is engaging and promotes meaningful discussion
+- Uses appropriate formatting and structure
+- Maintains authenticity and adds value to the community
+- Has an attention-grabbing but accurate title
+- Includes necessary context and details`,
       },
     },
   ],
   _meta: {
-    callback: "send_email",
-    responseSchema: EMAIL_SEND_RESPONSE_SCHEMA,
+    callback: "create_reddit_post",
+    responseSchema: REDDIT_POST_RESPONSE_SCHEMA,
   },
 };
 
-// Email Send Prompt
-export const REPLY_EMAIL_PROMPT: SamplingPrompt = {
-  name: "gmail_reply_email",
-  description: "Sends an email or reply based on user instructions",
+export const CREATE_REDDIT_REPLY_PROMPT: SamplingPrompt = {
+  name: "reddit_create_reply",
+  description: "Creates thoughtful, contextual Reddit replies",
   arguments: [
-    ...promptArgs,
     {
-      name: "to",
-      description: "Recipient email address(es)",
+      name: "subreddit",
+      description: "Subreddit context",
       required: true,
     },
     {
       name: "messageId",
-      description: "Optional message ID to reply to",
-      required: false,
-    },
-  ],
-  messages: [
-    {
-      role: "assistant",
-      content: {
-        type: "text",
-        text: EMAIL_SEND_INSTRUCTIONS,
-      },
-    },
-    {
-      role: "assistant",
-      content: {
-        type: "text",
-        text: `<History>
-          <threadContent>{{threadContent}}</threadContent>
-        </History>`,
-      },
-    },
-    {
-      role: "user",
-      content: {
-        type: "text",
-        text: `<input>
-          <userInstructions>{{userInstructions}}</userInstructions>
-          <to>{{to}}</to>
-          <replyTo>{{messageId}}</replyTo>
-        </input>`,
-      },
-    },
-  ],
-  _meta: {
-    callback: "reply_email",
-    responseSchema: EMAIL_REPLY_RESPONSE_SCHEMA,
-  },
-};
-
-// Email Send Prompt
-export const REPLY_DRAFT_PROMPT: SamplingPrompt = {
-  name: "gmail_reply_draft",
-  description: "Replies to a draft email based on user instructions",
-  arguments: [
-    ...promptArgs,
-    {
-      name: "to",
-      description: "Recipient email address(es)",
+      description: "ID of message to reply to",
       required: true,
     },
     {
-      name: "messageId",
-      description: "Optional message ID to reply to",
-      required: false,
-    },
-  ],
-  messages: [
-    {
-      role: "assistant",
-      content: {
-        type: "text",
-        text: EMAIL_SEND_INSTRUCTIONS,
-      },
-    },
-    {
-      role: "user",
-      content: {
-        type: "text",
-        text: `<input>
-          <userInstructions>{{userInstructions}}</userInstructions>
-          <to>{{to}}</to>
-          {{#messageId}}<replyTo>{{messageId}}</replyTo>{{/messageId}}
-        </input>`,
-      },
-    },
-  ],
-  _meta: {
-    callback: "reply_draft",
-    responseSchema: DRAFT_EMAIL_RESPONSE_SCHEMA,
-  },
-};
-
-// Email Send Prompt
-export const EDIT_DRAFT_PROMPT: SamplingPrompt = {
-  name: "gmail_edit_draft",
-  description: "Edits a draft email based on user instructions",
-  arguments: [
-    ...promptArgs,
-    {
-      name: "to",
-      description: "Recipient email address(es)",
-      required: true,
-    },
-    {
-      name: "messageId",
-      description: "Optional message ID to reply to",
-      required: false,
-    },
-  ],
-  messages: [
-    {
-      role: "assistant",
-      content: {
-        type: "text",
-        text: EMAIL_SEND_INSTRUCTIONS,
-      },
-    },
-    {
-      role: "user",
-      content: {
-        type: "text",
-        text: `<input>
-          <userInstructions>{{userInstructions}}</userInstructions>
-          <to>{{to}}</to>
-          {{#messageId}}<replyTo>{{messageId}}</replyTo>{{/messageId}}
-        </input>`,
-      },
-    },
-  ],
-  _meta: {
-    callback: "edit_draft",
-    responseSchema: DRAFT_EMAIL_RESPONSE_SCHEMA,
-  },
-};
-
-// Create Draft Prompt
-export const CREATE_DRAFT_PROMPT: SamplingPrompt = {
-  name: "gmail_create_draft",
-  description: "Creates a draft email based on user instructions",
-  arguments: [
-    ...promptArgs,
-    {
-      name: "to",
-      description: "Recipient email address(es)",
+      name: "content",
+      description: "Instructions for generating the reply",
       required: true,
     },
   ],
@@ -212,31 +105,49 @@ export const CREATE_DRAFT_PROMPT: SamplingPrompt = {
       role: "assistant",
       content: {
         type: "text",
-        text: EMAIL_SEND_INSTRUCTIONS,
+        text: "You are an expert Reddit commenter who creates thoughtful, well-reasoned replies that add value to discussions. You understand Reddit culture, subreddit dynamics, and how to engage constructively with other users.",
+      },
+    },
+    {
+      role: "assistant",
+      content: {
+        type: "text",
+        text: "I understand the subreddit rules and commenting guidelines:\n{{redditConfig}}",
+      },
+    },
+    {
+      role: "assistant",
+      content: {
+        type: "text",
+        text: "I will follow these content creation instructions:\n{{redditInstructions}}",
       },
     },
     {
       role: "user",
       content: {
         type: "text",
-        text: `<input>
-          <userInstructions>{{userInstructions}}</userInstructions>
-          <to>{{to}}</to>
-        </input>`,
+        text: `Create a Reddit reply with these parameters:
+
+Subreddit: {{subreddit}}
+Replying to: {{messageId}}
+
+Content Instructions: {{content}}
+
+Ensure the reply:
+- Is relevant and adds value to the discussion
+- Shows understanding of the context
+- Is well-reasoned and supported
+- Uses appropriate tone and style
+- Follows subreddit rules and Reddit etiquette
+- Encourages further constructive discussion`,
       },
     },
   ],
   _meta: {
-    callback: "create_draft",
-    responseSchema: DRAFT_EMAIL_RESPONSE_SCHEMA,
+    callback: "create_reddit_reply",
+    responseSchema: REDDIT_REPLY_RESPONSE_SCHEMA,
   },
 };
 
 // Export all prompts
-export const PROMPTS = [
-  SEND_EMAIL_PROMPT,
-  REPLY_EMAIL_PROMPT,
-  REPLY_DRAFT_PROMPT,
-  EDIT_DRAFT_PROMPT,
-  CREATE_DRAFT_PROMPT,
-];
+export const PROMPTS = [CREATE_REDDIT_POST_PROMPT, CREATE_REDDIT_REPLY_PROMPT];

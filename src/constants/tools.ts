@@ -27,29 +27,26 @@ export const TOOLS: Tool[] = [
       },
       required: ["subreddits"],
     },
-  },
-  {
-    name: "get_hot_posts",
-    description: "Fetches hot posts from configured subreddits using saved preferences",
-    inputSchema: {
-      type: "object",
-      properties: {},
+    _meta: {
+      hidden: false,
     },
   },
   {
-    name: "get_new_posts",
-    description: "Fetches newest posts from configured subreddits using saved preferences",
+    name: "get_reddit_posts",
+    description: "Fetches posts from configured subreddits using saved preferences",
     inputSchema: {
       type: "object",
-      properties: {},
+      properties: {
+        sort: {
+          type: "string",
+          enum: ["hot", "new", "controversial"],
+          description: "How to sort the posts",
+        },
+      },
+      required: ["sort"],
     },
-  },
-  {
-    name: "get_controversial_posts",
-    description: "Fetches controversial posts from configured subreddits using saved preferences",
-    inputSchema: {
-      type: "object",
-      properties: {},
+    _meta: {
+      hidden: false,
     },
   },
   {
@@ -59,67 +56,47 @@ export const TOOLS: Tool[] = [
       type: "object",
       properties: {},
     },
-  },
-  {
-    name: "create_reddit_post",
-    description: "Creates a new post for Reddit. This will not post the post to Reddit.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        subreddit: {
-          type: "string",
-          description: "The subreddit where the post will be submitted",
-        },
-        title: {
-          type: "string",
-          description: "Title of the post",
-        },
-        content: {
-          type: "string",
-          description: "Content/body of the post",
-        },
-        kind: {
-          type: "string",
-          enum: ["text", "link"],
-          description: "Type of post to create",
-        },
-        url: {
-          type: "string",
-          description: "URL for link posts",
-        },
-      },
-      required: ["subreddit", "title", "kind"],
+    _meta: {
+      hidden: false,
     },
   },
   {
-    name: "create_reddit_reply",
-    description: "Creates a new reply for Reddit. This will not post the reply to Reddit.",
+    name: "create_reddit_content",
+    description: "Creates new content for Reddit (post or reply). This will not post to Reddit.",
     inputSchema: {
       type: "object",
       properties: {
+        type: {
+          type: "string",
+          enum: ["post", "reply"],
+          description: "Type of content to create",
+        },
         subreddit: {
           type: "string",
-          description: "The subreddit where the post will be submitted",
-        },
-        title: {
-          type: "string",
-          description: "Title of the post",
+          description: "The subreddit where the content will be submitted",
         },
         content: {
           type: "string",
-          description: "Content/body of the post",
+          description: "Instructions for generating the content using LLM",
+        },
+        messageId: {
+          type: "string",
+          description: "The ID of the post/comment to reply to (required for replies)",
         },
         kind: {
           type: "string",
           enum: ["text", "link"],
-          description: "Type of post to create",
+          description: "Type of post to create (optional for posts, defaults to text)",
         },
         url: {
           type: "string",
-          description: "URL for link posts",
+          description: "URL for link posts (required if kind is 'link')",
         },
       },
-      required: ["subreddit", "title", "kind"],
+      required: ["type", "subreddit", "content"],
+    },
+    _meta: {
+      hidden: false,
     },
   },
   {
@@ -130,6 +107,7 @@ export const TOOLS: Tool[] = [
       properties: {},
     },
     _meta: {
+      hidden: true,
       ignore: true,
     },
   },
@@ -141,6 +119,7 @@ export const TOOLS: Tool[] = [
       properties: {},
     },
     _meta: {
+      hidden: true,
       ignore: true,
     },
   },
@@ -262,6 +241,9 @@ export const TOOLS: Tool[] = [
         "debateStyle",
         "participationStyle",
       ],
+    },
+    _meta: {
+      hidden: false,
     },
   },
 ];

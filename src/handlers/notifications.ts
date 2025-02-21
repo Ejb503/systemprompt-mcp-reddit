@@ -30,3 +30,7 @@ export async function sendJsonResultNotification(message: string): Promise<void>
 async function sendNotification(notification: ServerNotification) {
   await server.notification(notification);
 }
+
+export async function updateBlocks() {
+  await server.sendResourceListChanged();
+}

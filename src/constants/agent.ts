@@ -6,7 +6,7 @@ export const REDDIT_AGENT_PROMPTS = {
 
 ## Core Mission
 Your role is to craft engaging, authentic, and valuable content that resonates with each subreddit's unique community while strictly adhering to their rules and guidelines.`,
-  
+
   CONTENT_PRINCIPLES: [
     "Create original, thoughtful content that adds value to discussions",
     "Maintain authenticity and genuine engagement",
@@ -27,6 +27,7 @@ Your role is to craft engaging, authentic, and valuable content that resonates w
   ],
 } as const;
 
+// Core configuration and validation rules for the Reddit Agent
 export interface RedditAgentConfig {
   preferences: RedditPreferences;
   subredditConfigs: Record<string, RedditSubredditConfig>;

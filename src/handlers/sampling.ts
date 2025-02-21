@@ -1,6 +1,8 @@
 import type { CreateMessageRequest, CreateMessageResult } from "@modelcontextprotocol/sdk/types.js";
 import { validateRequest } from "../utils/validation.js";
 import { server } from "../server.js";
+import { sendOperationNotification } from "./notifications.js";
+import { handleCreateRedditPostCallback, handleCreateRedditReplyCallback } from "./callbacks.js";
 
 export async function sendSamplingRequest(
   request: CreateMessageRequest,
@@ -30,8 +32,22 @@ export async function sendSamplingRequest(
  * @returns The tool response
  */
 async function handleCallback(callback: string, result: CreateMessageResult): Promise<string> {
-  switch (callback) {
-    default:
-      throw new Error(`Unknown callback type: ${callback}`);
+  try {
+    await sendOperationNotification(callback, `Callback started: ${callback}`);
+    switch (callback) {
+      case "create_reddit_post":
+        return await handleCreateRedditPostCallback(result);
+      case "create_reddit_reply":
+        return await handleCreateRedditReplyCallback(result);
+      // ... other cases
+      default:
+        throw new Error(`Unknown callback type: ${callback}`);
+    }
+  } catch (error) {
+    await sendOperationNotification(
+      callback,
+      `Callback failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+    throw error;
   }
 }

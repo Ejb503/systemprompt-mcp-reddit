@@ -12,6 +12,8 @@ import {
   RedditPreferences,
   RedditSubredditConfig,
   RedditInstructionConfig,
+  CreateRedditPostArgs,
+  CreateRedditReplyArgs,
 } from "../types/tool-schemas.js";
 import { TOOL_ERROR_MESSAGES } from "../constants/tools.js";
 import { sendSamplingRequest } from "./sampling.js";
@@ -19,11 +21,7 @@ import { handleGetPrompt } from "./prompt-handlers.js";
 import { injectVariables } from "../utils/message-handlers.js";
 import { SystemPromptService } from "../services/systemprompt-service.js";
 import { sendJsonResultNotification } from "./notifications.js";
-import {
-  SystempromptBlockRequest,
-  RedditConfigContent,
-  SubredditRules,
-} from "../types/systemprompt.js";
+import { SystempromptBlockRequest, SubredditRules } from "../types/systemprompt.js";
 import { RedditError } from "../errors/reddit-error.js";
 import {
   RedditPost,
@@ -31,105 +29,13 @@ import {
   RedditPostResponse,
   FetchPostsOptions,
 } from "../types/reddit.js";
-import { REDDIT_AGENT_PROMPTS, RedditAgentConfig, POST_VALIDATION_RULES } from "../constants/agent.js";
+import {
+  CREATE_REDDIT_POST_PROMPT,
+  CREATE_REDDIT_REPLY_PROMPT,
+} from "../constants/sampling-prompts.js";
 
 export async function handleListTools(request: ListToolsRequest): Promise<ListToolsResult> {
   return { tools: TOOLS };
-}
-
-// Add new interface for post arguments
-interface RedditPostArgs {
-  subreddit: string;
-  title: string;
-  content?: string;
-  kind: "text" | "link";
-  url?: string;
-}
-
-// Add these new interfaces near the top with other interfaces
-interface RedditAgentPostRequest {
-  subreddit: string;
-  topic?: string;
-  contentType: "text" | "link";
-  customInstructions?: string[];
-}
-
-interface GeneratedPost {
-  title: string;
-  content?: string;
-  url?: string;
-}
-
-// Add this new function before handleToolCall
-async function createAgentPost(request: RedditAgentPostRequest): Promise<RedditPostArgs> {
-  const systemPromptService = SystemPromptService.getInstance();
-  const redditService = RedditService.getInstance();
-
-  // Get configuration and instructions
-  const configBlocks = await systemPromptService.listBlocks();
-  const redditConfig = configBlocks.find(block => block.prefix === "reddit_config");
-  const instructionsBlock = configBlocks.find(block => block.prefix === "reddit_instructions");
-
-  if (!redditConfig) {
-    throw new Error("Reddit configuration not found");
-  }
-
-  const config = JSON.parse(redditConfig.content as string);
-  const instructions = instructionsBlock ? JSON.parse(instructionsBlock.content as string) : {};
-
-  // Validate subreddit is configured
-  if (!config.subredditRules?.[request.subreddit]) {
-    throw new Error(`Subreddit ${request.subreddit} not configured`);
-  }
-
-  // Get recent posts for context and to avoid duplication
-  const recentPosts = await redditService.fetchPosts({
-    sort: "new",
-    subreddits: [request.subreddit],
-    limit: 10,
-  });
-
-  // Prepare context for content generation
-  const promptContext = {
-    subreddit: request.subreddit,
-    rules: config.subredditRules[request.subreddit],
-    recentPosts: recentPosts.map(post => ({
-      title: post.title,
-      summary: post.selftext?.substring(0, 200),
-    })),
-    topic: request.topic,
-    contentType: request.contentType,
-    customInstructions: [...(instructions.guidelines || []), ...(request.customInstructions || [])],
-  };
-
-  // Generate post using the sampling service
-  const postContent = await sendSamplingRequest({
-    prompt: JSON.stringify(promptContext),
-    temperature: 0.7,
-  });
-
-  // Parse and validate the generated content
-  const generatedPost = JSON.parse(postContent) as GeneratedPost;
-  
-  // Validate against rules
-  if (generatedPost.title.length < POST_VALIDATION_RULES.MINIMUM_TITLE_LENGTH ||
-      generatedPost.title.length > POST_VALIDATION_RULES.MAXIMUM_TITLE_LENGTH) {
-    throw new Error("Generated title length does not meet requirements");
-  }
-
-  if (request.contentType === "text" && generatedPost.content && 
-      (generatedPost.content.length < POST_VALIDATION_RULES.MINIMUM_CONTENT_LENGTH ||
-       generatedPost.content.length > POST_VALIDATION_RULES.MAXIMUM_CONTENT_LENGTH)) {
-    throw new Error("Generated content length does not meet requirements");
-  }
-
-  return {
-    subreddit: request.subreddit,
-    title: generatedPost.title,
-    content: request.contentType === "text" ? generatedPost.content : undefined,
-    kind: request.contentType,
-    url: request.contentType === "link" ? generatedPost.url : undefined,
-  };
 }
 
 export async function handleToolCall(request: CallToolRequest): Promise<CallToolResult> {
@@ -143,13 +49,6 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
         sendJsonResultNotification(JSON.stringify(args, null, 2));
 
         if (!isConfigureRedditArgs(args)) {
-          console.log("Validation failed for args:", {
-            hasSubreddits: Boolean(args && typeof args === "object" && "subreddits" in args),
-            subredditsType:
-              args && typeof args === "object" ? typeof (args as any).subreddits : "undefined",
-            isArray:
-              args && typeof args === "object" ? Array.isArray((args as any).subreddits) : false,
-          });
           throw new RedditError("Invalid arguments for configure_reddit", "VALIDATION_ERROR");
         }
         const { subreddits } = args;
@@ -184,11 +83,11 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
             };
           }
 
-          const redditConfig: SystempromptBlockRequest<RedditConfigContent> = {
-            content: {
+          const redditConfig: SystempromptBlockRequest = {
+            content: JSON.stringify({
               subreddits,
               subredditRules,
-            },
+            }),
             type: "block",
             prefix: "reddit_config",
             metadata: {
@@ -198,13 +97,7 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
             },
           };
 
-          // Stringify the content before saving
-          const blockToSave = {
-            ...redditConfig,
-            content: JSON.stringify(redditConfig.content),
-          };
-
-          const result = await systemPromptService.upsertBlock(blockToSave);
+          const result = await systemPromptService.upsertBlock(redditConfig);
 
           return {
             content: [
@@ -244,9 +137,9 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
         }
 
         try {
-          // Create the instruction block
-          const instructionBlock: SystempromptBlockRequest<unknown> = {
-            content: args,
+          // Create the instruction block with only allowed metadata properties
+          const instructionBlock: SystempromptBlockRequest = {
+            content: JSON.stringify(args),
             type: "block",
             prefix: "reddit_instructions",
             metadata: {
@@ -257,10 +150,7 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
           };
 
           // Save the block
-          const result = await systemPromptService.upsertBlock({
-            ...instructionBlock,
-            content: JSON.stringify(instructionBlock.content),
-          });
+          const result = await systemPromptService.upsertBlock(instructionBlock);
 
           return {
             content: [
@@ -314,12 +204,14 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
         }
       }
 
-      case "get_hot_posts":
-      case "get_new_posts":
-      case "get_controversial_posts": {
+      case "get_reddit_posts": {
         try {
-          const configBlock = await systemPromptService.listBlocks();
-          if (!configBlock || configBlock.length === 0) {
+          const args = request.params.arguments as { sort: "hot" | "new" | "controversial" };
+
+          const configBlocks = await systemPromptService.listBlocks();
+          const redditConfigBlock = configBlocks.find((block) => block.prefix === "reddit_config");
+
+          if (!redditConfigBlock) {
             return {
               content: [
                 {
@@ -329,23 +221,14 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
               ],
             };
           }
-          sendJsonResultNotification("Config block received:");
-          const config = JSON.parse(configBlock[0].content as string);
-          sendJsonResultNotification(JSON.stringify(config, null, 2));
 
+          const config = JSON.parse(redditConfigBlock.content as string);
           if (!config.subreddits || !Array.isArray(config.subreddits)) {
             throw new Error("Invalid Reddit configuration: missing or invalid subreddits array");
           }
 
-          // Map tool name to sort type
-          const sortType = {
-            get_hot_posts: "hot",
-            get_new_posts: "new",
-            get_controversial_posts: "controversial",
-          }[request.params.name] as "hot" | "new" | "controversial";
-
           const posts = await redditService.fetchPosts({
-            sort: sortType,
+            sort: args.sort,
             timeFilter: config.preferences?.timeFilter || "day",
             limit: config.preferences?.maxPostsPerRequest || 10,
             subreddits: config.subreddits,
@@ -387,96 +270,90 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
         }
       }
 
-      case "create_reddit_post": {
-        const args = request.params.arguments as Record<string, unknown>;
-        const postArgs: RedditPostArgs = {
-          subreddit: args.subreddit as string,
-          title: args.title as string,
-          content: args.content as string | undefined,
-          kind: args.kind as "text" | "link",
-          url: args.url as string | undefined,
+      case "create_reddit_content": {
+        const args = request.params.arguments as {
+          type: "post" | "reply";
+          subreddit: string;
+          content: string;
+          messageId?: string;
+          kind?: "text" | "link";
+          url?: string;
         };
 
-        try {
-          // Validate the post arguments
-          if (postArgs.kind === "link" && !postArgs.url) {
-            throw new Error("URL is required for link posts");
-          }
-
-          // Create a block to store the post
-          const postBlock: SystempromptBlockRequest<unknown> = {
-            content: postArgs,
-            type: "block",
-            prefix: "reddit_post",
-            metadata: {
-              title: "Reddit Post",
-              description: "Prepared Reddit post content",
-              tag: ["mcp_systemprompt_reddit_post"],
-            },
-          };
-
-          // Save the block with stringified content
-          const result = await systemPromptService.upsertBlock({
-            ...postBlock,
-            content: JSON.stringify(postBlock.content),
-          });
-
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(
-                  {
-                    status: "success",
-                    message: "Post prepared successfully",
-                    post: result,
-                  },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          console.error("Failed to create Reddit post:", error);
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Failed to create Reddit post: ${error instanceof Error ? error.message : "Unknown error"}`,
-              },
-            ],
-          };
+        // Validate arguments based on type
+        if (args.type === "reply" && !args.messageId) {
+          throw new RedditError("messageId is required for replies", "VALIDATION_ERROR");
         }
-      }
-
-      case "create_agent_post": {
-        const args = request.params.arguments as RedditAgentPostRequest;
-        
-        try {
-          const post = await createAgentPost(args);
-          
-          // Create the post using the existing create_reddit_post logic
-          const result = await handleToolCall({
-            ...request,
-            params: {
-              name: "create_reddit_post",
-              arguments: post,
-            },
-          });
-
-          return result;
-        } catch (error) {
-          console.error("Failed to create agent post:", error);
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Failed to create agent post: ${error instanceof Error ? error.message : "Unknown error"}`,
-              },
-            ],
-          };
+        if (args.kind === "link" && !args.url) {
+          throw new RedditError("url is required for link posts", "VALIDATION_ERROR");
         }
+
+        // Fetch configurations
+        const configBlocks = await systemPromptService.listBlocks();
+        const redditConfigBlock = configBlocks.find((block) => block.prefix === "reddit_config");
+        const instructionsBlock = configBlocks.find(
+          (block) => block.prefix === "reddit_instructions",
+        );
+
+        if (!redditConfigBlock || !instructionsBlock) {
+          throw new RedditError(
+            "Reddit configuration or instructions not found",
+            "VALIDATION_ERROR",
+          );
+        }
+
+        // Convert all values to strings and include configs
+        const stringArgs = {
+          ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
+          redditConfig: redditConfigBlock.content,
+          redditInstructions: instructionsBlock.content,
+        };
+
+        const promptName =
+          args.type === "post" ? CREATE_REDDIT_POST_PROMPT.name : CREATE_REDDIT_REPLY_PROMPT.name;
+        const promptMessages =
+          args.type === "post"
+            ? CREATE_REDDIT_POST_PROMPT.messages
+            : CREATE_REDDIT_REPLY_PROMPT.messages;
+
+        const prompt = await handleGetPrompt({
+          method: "prompts/get",
+          params: {
+            name: promptName,
+            arguments: stringArgs,
+          },
+        });
+
+        const responseSchema = prompt._meta?.responseSchema;
+        if (!responseSchema) {
+          throw new Error(`${TOOL_ERROR_MESSAGES.TOOL_CALL_FAILED} No response schema found`);
+        }
+
+        await sendSamplingRequest({
+          method: "sampling/createMessage",
+          params: {
+            messages: promptMessages.map((msg) => injectVariables(msg, stringArgs)) as Array<{
+              role: "user" | "assistant";
+              content: { type: "text"; text: string };
+            }>,
+            maxTokens: 100000,
+            temperature: 0.7,
+            _meta: {
+              callback: args.type === "post" ? "create_reddit_post" : "create_reddit_reply",
+              responseSchema: responseSchema,
+            },
+            arguments: stringArgs,
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Reddit ${args.type} creation started, please wait...`,
+            },
+          ],
+        };
       }
 
       default:
@@ -542,4 +419,42 @@ function isConfigureRedditArgs(args: unknown): args is ConfigureRedditArgs {
   }
 
   return true;
+}
+
+function isCreateRedditPostArgs(args: unknown): args is CreateRedditPostArgs {
+  if (!args || typeof args !== "object") return false;
+  const a = args as Record<string, unknown>;
+
+  // Check required fields first
+  if (typeof a.subreddit !== "string" || typeof a.content !== "string") {
+    throw new RedditError(
+      "Missing or invalid required fields: subreddit and content must be strings",
+      "VALIDATION_ERROR",
+    );
+  }
+
+  // Check kind if present
+  if (a.kind !== undefined && a.kind !== "text" && a.kind !== "link") {
+    throw new RedditError(
+      "Invalid 'kind' value. Must be either 'text' or 'link'",
+      "VALIDATION_ERROR",
+    );
+  }
+
+  // Check url if present
+  if (a.kind === "link" && (typeof a.url !== "string" || !a.url)) {
+    throw new RedditError("URL is required for link posts", "VALIDATION_ERROR");
+  }
+
+  return true;
+}
+
+function isCreateRedditReplyArgs(args: unknown): args is CreateRedditReplyArgs {
+  if (!args || typeof args !== "object") return false;
+  const a = args as Record<string, unknown>;
+  return (
+    typeof a.subreddit === "string" &&
+    typeof a.messageId === "string" &&
+    typeof a.content === "string"
+  );
 }
