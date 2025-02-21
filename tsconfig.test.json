@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest", "@jest/globals"],
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noImplicitAny": false,
+    "strict": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "noImplicitThis": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "allowUnreachableCode": true,
+    "skipLibCheck": true,
+    "noStrictGenericChecks": true,
+    "useUnknownInCatchVariables": false
+  },
+  "include": ["src/**/*", "**/*.test.ts", "**/*.test.tsx"],
+  "exclude": ["node_modules"]
+}

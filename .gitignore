@@ -1,0 +1,17 @@
+node_modules/
+build/
+*.log
+.env*
+
+agent
+agent/*
+
+coverage/
+output/
+scripts/
+
+# Environment variables
+.env
+
+# Keep example file
+!.env.example
