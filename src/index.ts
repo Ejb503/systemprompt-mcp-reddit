@@ -49,7 +49,11 @@ export async function main() {
   const transport = new StdioServerTransport();
 
   await server.connect(transport);
+  sendJsonResultNotification(JSON.stringify("Transport connected", null, 2));
+
   const redditService = RedditService.getInstance();
+  sendJsonResultNotification(JSON.stringify("RedditService initialized", null, 2));
+
   try {
     await redditService.initialize();
     const hotPosts = await redditService.fetchPosts({
