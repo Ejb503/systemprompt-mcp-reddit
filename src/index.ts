@@ -18,6 +18,7 @@ import { sendSamplingRequest } from "./handlers/sampling.js";
 import { server } from "./server.js";
 import { RedditService } from "./services/reddit/reddit-service.js";
 import { sendJsonResultNotification } from "./handlers/notifications.js";
+
 export async function main() {
   config();
 
@@ -49,19 +50,14 @@ export async function main() {
   const transport = new StdioServerTransport();
 
   await server.connect(transport);
-  sendJsonResultNotification(JSON.stringify("Transport connected", null, 2));
-
   const redditService = RedditService.getInstance();
-  sendJsonResultNotification(JSON.stringify("RedditService initialized", null, 2));
 
   try {
     await redditService.initialize();
-    const hotPosts = await redditService.fetchPosts({
-      sort: "hot",
-      timeFilter: "day",
-      limit: 1,
-    });
-    sendJsonResultNotification(JSON.stringify(hotPosts, null, 2));
+
+    // Fetch and send the Reddit configuration data
+    const configData = await redditService.getRedditConfig();
+    sendJsonResultNotification(JSON.stringify(configData, null, 2));
   } catch (error) {
     throw new Error(
       `Failed to connect to Reddit API: ${error instanceof Error ? error.message : error}`,

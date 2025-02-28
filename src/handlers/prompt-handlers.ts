@@ -5,8 +5,8 @@ import type {
   ListPromptsResult,
   PromptMessage,
 } from "@modelcontextprotocol/sdk/types.js";
-import { PROMPTS } from "../constants/sampling-prompts.js";
-import { injectVariablesIntoText } from "../utils/message-handlers.js";
+import { PROMPTS } from "@/constants/sampling/index.js";
+import { injectVariablesIntoText } from "@/utils/message-handlers.js";
 
 export async function handleListPrompts(request: ListPromptsRequest): Promise<ListPromptsResult> {
   try {
@@ -41,7 +41,7 @@ export async function handleGetPrompt(request: GetPromptRequest): Promise<GetPro
       throw new Error(`Messages not found for prompt: ${request.params.name}`);
     }
 
-    const injectedMessages = foundPrompt.messages.map((message) => {
+    const injectedMessages = foundPrompt.messages.map((message: PromptMessage) => {
       if (message.role === "user" && message.content.type === "text" && request.params.arguments) {
         return {
           role: message.role,

@@ -4,7 +4,7 @@ import type {
   ListPromptsResult,
   Prompt,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { SystempromptPromptResponse } from "../../types/systemprompt.js";
+import type { SystempromptPromptResponse } from "../@/types/systemprompt.js";
 import { handleListPrompts, handleGetPrompt } from "../prompt-handlers.js";
 import { SystemPromptService } from "../../services/systemprompt-service.js";
 

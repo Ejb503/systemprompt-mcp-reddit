@@ -1,21 +1,21 @@
 import { RedditAuthService } from "./reddit-auth-service.js";
-import { RedditTransformService } from "./reddit-transform-service.js";
-import { RedditError } from "../../errors/reddit-error.js";
 import {
   RedditApiResponse,
   RedditSubreddit,
   SubredditRulesResponse,
   SubredditRequirements,
-} from "../../types/reddit.js";
+  FetchSubscribedSubredditsOptions,
+  SubscribedSubreddit,
+  RedditError,
+} from "@/types/reddit.js";
 import { RedditFetchService } from "./reddit-fetch-service.js";
+import {
+  transformSubreddit,
+  transformSubscribedSubreddit,
+} from "../../utils/reddit-transformers.js";
 
 export class RedditSubredditService extends RedditFetchService {
-  constructor(
-    baseUrl: string,
-    authService: RedditAuthService,
-    private readonly transformService: RedditTransformService,
-    rateLimitDelay: number,
-  ) {
+  constructor(baseUrl: string, authService: RedditAuthService, rateLimitDelay: number) {
     super(baseUrl, authService, rateLimitDelay);
   }
 
@@ -26,7 +26,7 @@ export class RedditSubredditService extends RedditFetchService {
         this.redditFetch<SubredditRulesResponse>(`/r/${subreddit}/about/rules.json`),
       ]);
 
-      const subredditData = this.transformService.transformSubreddit({
+      const subredditData = transformSubreddit({
         ...aboutData.data,
         rules: rulesData.rules,
       });
@@ -41,6 +41,33 @@ export class RedditSubredditService extends RedditFetchService {
     } catch (error) {
       throw new RedditError(
         `Failed to fetch subreddit info: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "API_ERROR",
+        error,
+      );
+    }
+  }
+
+  /**
+   * Fetches the list of subreddits the authenticated user is subscribed to
+   * @param options Options for fetching subscribed subreddits
+   * @returns Array of subscribed subreddits
+   */
+  public async fetchSubscribedSubreddits(
+    options: FetchSubscribedSubredditsOptions = {},
+  ): Promise<SubscribedSubreddit[]> {
+    try {
+      const limit = options.limit || 100;
+      let endpoint = `/subreddits/mine/subscriber.json?limit=${limit}`;
+
+      if (options.after) {
+        endpoint += `&after=${options.after}`;
+      }
+
+      const data = await this.redditFetch<RedditApiResponse<Record<string, unknown>>>(endpoint);
+      return (data.data.children || []).map((item) => transformSubscribedSubreddit(item.data));
+    } catch (error) {
+      throw new RedditError(
+        `Failed to fetch subscribed subreddits: ${error instanceof Error ? error.message : "Unknown error"}`,
         "API_ERROR",
         error,
       );

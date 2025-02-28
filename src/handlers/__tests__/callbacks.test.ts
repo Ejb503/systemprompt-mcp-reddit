@@ -17,7 +17,7 @@ import {
 } from "../callbacks";
 import type { CreateMessageResult } from "@modelcontextprotocol/sdk/types.js";
 import { SystemPromptService } from "../../services/systemprompt-service";
-import type { SystempromptPromptResponse } from "../../types/systemprompt";
+import type { SystempromptPromptResponse } from "../@/types/systemprompt";
 
 // Mock response data
 const mockPromptResponse: SystempromptPromptResponse = {

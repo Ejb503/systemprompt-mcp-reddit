@@ -4,7 +4,7 @@ import type {
   SystempromptBlockResponse,
   SystempromptUserStatusResponse,
   SystempromptBlockRequest,
-} from "../types/systemprompt.js";
+} from "@/types/systemprompt.js";
 
 export class SystemPromptService {
   private static instance: SystemPromptService | null = null;

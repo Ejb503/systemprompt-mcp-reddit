@@ -1,5 +1,5 @@
 import { RedditAuthService } from "./reddit-auth-service.js";
-import { RedditError } from "../../errors/reddit-error.js";
+import { RedditError } from "@/types/reddit.js";
 
 export abstract class RedditFetchService {
   constructor(

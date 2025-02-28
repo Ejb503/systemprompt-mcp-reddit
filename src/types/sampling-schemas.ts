@@ -183,3 +183,75 @@ export const REDDIT_REPLY_RESPONSE_SCHEMA: JSONSchema7 = {
   },
   required: ["content", "subreddit", "messageId"],
 };
+
+export const REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA: JSONSchema7 = {
+  type: "object",
+  properties: {
+    action: {
+      type: "string",
+      description: "Suggested action to take (e.g., 'create_post', 'reply', 'wait')",
+    },
+    subreddit: {
+      type: "string",
+      description: "Suggested subreddit for the action",
+    },
+    reasoning: {
+      type: "string",
+      description: "Explanation for why this action is suggested",
+    },
+    content: {
+      type: "string",
+      description: "Suggested content or topic for the action",
+    },
+    messageId: {
+      type: "string",
+      description: "ID of message to reply to (if action is 'reply')",
+    },
+  },
+  required: ["action", "reasoning"],
+};
+
+export const REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA: JSONSchema7 = {
+  type: "object",
+  properties: {
+    subreddit: {
+      type: "string",
+      description: "Name of the analyzed subreddit",
+    },
+    summary: {
+      type: "string",
+      description: "Overall summary of the subreddit's current state",
+    },
+    trendingTopics: {
+      type: "array",
+      description: "List of trending topics in the subreddit",
+      items: {
+        type: "string",
+      },
+    },
+    sentiment: {
+      type: "string",
+      enum: ["positive", "neutral", "negative", "mixed"],
+      description: "Overall sentiment of the subreddit",
+    },
+    recommendedActions: {
+      type: "array",
+      description: "Recommended actions based on the analysis",
+      items: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            description: "Recommended action",
+          },
+          reason: {
+            type: "string",
+            description: "Reason for the recommendation",
+          },
+        },
+        required: ["action", "reason"],
+      },
+    },
+  },
+  required: ["subreddit", "summary", "trendingTopics", "sentiment", "recommendedActions"],
+};

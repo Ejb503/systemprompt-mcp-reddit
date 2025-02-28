@@ -1,4 +1,4 @@
-import type { SystempromptBlockResponse } from "../types/systemprompt.js";
+import type { SystempromptBlockResponse } from "@/types/systemprompt.js";
 
 class MockSystemPromptService {
   private static instance: MockSystemPromptService;
@@ -21,9 +21,7 @@ class MockSystemPromptService {
 
   private checkInitialized(): void {
     if (!this.initialized || !this.apiKey) {
-      throw new Error(
-        "SystemPromptService must be initialized with an API key first"
-      );
+      throw new Error("SystemPromptService must be initialized with an API key first");
     }
   }
 
@@ -34,8 +32,7 @@ class MockSystemPromptService {
         id: "default",
         content: JSON.stringify({
           name: "Systemprompt Agent",
-          description:
-            "An expert agent for managing and organizing content in workspaces",
+          description: "An expert agent for managing and organizing content in workspaces",
           instruction: "You are a specialized agent",
           voice: "Kore",
           config: {
@@ -54,8 +51,7 @@ class MockSystemPromptService {
         }),
         metadata: {
           title: "Systemprompt Agent",
-          description:
-            "An expert agent for managing and organizing content in workspaces",
+          description: "An expert agent for managing and organizing content in workspaces",
           created: new Date().toISOString(),
           updated: new Date().toISOString(),
           version: 1,
@@ -76,8 +72,7 @@ class MockSystemPromptService {
         id: "default",
         content: JSON.stringify({
           name: "Systemprompt Agent",
-          description:
-            "An expert agent for managing and organizing content in workspaces",
+          description: "An expert agent for managing and organizing content in workspaces",
           instruction: "You are a specialized agent",
           voice: "Kore",
           config: {
@@ -96,8 +91,7 @@ class MockSystemPromptService {
         }),
         metadata: {
           title: "Systemprompt Agent",
-          description:
-            "An expert agent for managing and organizing content in workspaces",
+          description: "An expert agent for managing and organizing content in workspaces",
           created: new Date().toISOString(),
           updated: new Date().toISOString(),
           version: 1,

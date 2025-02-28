@@ -20,6 +20,15 @@ export interface RedditComment {
   permalink: string;
 }
 
+export interface RedditCommentThread {
+  comment: RedditComment;
+  replies: RedditCommentThread[];
+}
+
+export interface RedditPostWithComments extends RedditPost {
+  comments: RedditCommentThread[];
+}
+
 export interface RedditUser {
   name: string;
   createdUtc: number;
@@ -129,4 +138,65 @@ export interface SubredditRequirements {
     maxLength?: number;
   };
   flairRequired?: boolean;
+}
+
+export interface RedditNotification {
+  id: string;
+  name: string;
+  type: "comment_reply" | "post_reply" | "username_mention" | "message" | "other";
+  subject: string;
+  body: string;
+  date: Date;
+  author: string;
+  subreddit?: string;
+  context?: string;
+  postId?: string;
+  commentId?: string;
+  createdUtc: number;
+  isNew: boolean;
+  permalink?: string;
+}
+
+export interface FetchNotificationsOptions {
+  filter?: "all" | "unread" | "messages" | "comments" | "mentions";
+  limit?: number;
+  markRead?: boolean;
+}
+
+export interface FetchSubscribedSubredditsOptions {
+  limit?: number;
+  after?: string;
+}
+
+export interface SubscribedSubreddit {
+  id: string;
+  name: string;
+  displayName: string;
+  title: string;
+  description: string;
+  subscribers: number;
+  isNsfw: boolean;
+  url: string;
+  icon?: string;
+  createdUtc: number;
+  type: string;
+}
+
+export type RedditErrorType =
+  | "CONFIGURATION_ERROR"
+  | "INITIALIZATION_ERROR"
+  | "AUTH_ERROR"
+  | "API_ERROR"
+  | "RATE_LIMIT_ERROR"
+  | "VALIDATION_ERROR";
+
+export class RedditError extends Error {
+  constructor(
+    message: string,
+    public readonly type: RedditErrorType,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "RedditError";
+  }
 }

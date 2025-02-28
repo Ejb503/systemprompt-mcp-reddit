@@ -12,7 +12,7 @@ import {
 import type {
   SystempromptPromptResponse,
   SystempromptBlockResponse,
-} from "../../types/systemprompt.js";
+} from "../@/types/systemprompt.js";
 import type { GetPromptResult } from "@modelcontextprotocol/sdk/types.js";
 
 describe("MCP Mappers", () => {
@@ -237,9 +237,7 @@ describe("MCP Mappers", () => {
       const result = mapPromptToGetPromptResult(mockSystemPromptResult);
 
       expect(result.name).toBe(mockSystemPromptResult.metadata.title);
-      expect(result.description).toBe(
-        mockSystemPromptResult.metadata.description
-      );
+      expect(result.description).toBe(mockSystemPromptResult.metadata.description);
       expect(result.messages).toEqual([
         {
           role: "assistant",
@@ -257,9 +255,7 @@ describe("MCP Mappers", () => {
       const result = mapPromptToGetPromptResult(mockArrayPromptResult);
 
       expect(result.name).toBe(mockArrayPromptResult.metadata.title);
-      expect(result.description).toBe(
-        mockArrayPromptResult.metadata.description
-      );
+      expect(result.description).toBe(mockArrayPromptResult.metadata.description);
       expect(result.messages).toEqual([
         {
           role: "assistant",
@@ -277,9 +273,7 @@ describe("MCP Mappers", () => {
       const result = mapPromptToGetPromptResult(mockNestedPromptResult);
 
       expect(result.name).toBe(mockNestedPromptResult.metadata.title);
-      expect(result.description).toBe(
-        mockNestedPromptResult.metadata.description
-      );
+      expect(result.description).toBe(mockNestedPromptResult.metadata.description);
       expect(result.messages).toEqual([
         {
           role: "assistant",

@@ -6,7 +6,7 @@ import type {
   SystempromptUserStatusResponse,
   SystempromptBlockResponse,
   SystempromptAgentResponse,
-} from "../../types/systemprompt.js";
+} from "../@/types/systemprompt.js";
 
 // Mock the server config
 jest.mock("../../config/server-config.js", () => ({

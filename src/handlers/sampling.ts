@@ -2,7 +2,12 @@ import type { CreateMessageRequest, CreateMessageResult } from "@modelcontextpro
 import { validateRequest } from "../utils/validation.js";
 import { server } from "../server.js";
 import { sendOperationNotification } from "./notifications.js";
-import { handleCreateRedditPostCallback, handleCreateRedditReplyCallback } from "./callbacks.js";
+import {
+  handleCreateRedditPostCallback,
+  handleCreateRedditReplyCallback,
+  handleSuggestActionCallback,
+  handleAnalyseSubredditCallback,
+} from "./callbacks.js";
 
 export async function sendSamplingRequest(
   request: CreateMessageRequest,
@@ -39,7 +44,10 @@ async function handleCallback(callback: string, result: CreateMessageResult): Pr
         return await handleCreateRedditPostCallback(result);
       case "create_reddit_reply":
         return await handleCreateRedditReplyCallback(result);
-      // ... other cases
+      case "suggest_action":
+        return await handleSuggestActionCallback(result);
+      case "analyse_subreddit_callback":
+        return await handleAnalyseSubredditCallback(result);
       default:
         throw new Error(`Unknown callback type: ${callback}`);
     }

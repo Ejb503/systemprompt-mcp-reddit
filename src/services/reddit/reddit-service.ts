@@ -1,16 +1,25 @@
 import {
   RedditPost,
   RedditServiceConfig,
-  RedditAuthResponse,
+  RedditError,
   RedditPostParams,
   RedditPostResponse,
   FetchPostsOptions,
-} from "../../types/reddit.js";
-import { RedditError } from "../../errors/reddit-error.js";
+  RedditPostWithComments,
+  RedditNotification as ApiRedditNotification,
+  FetchNotificationsOptions,
+  FetchSubscribedSubredditsOptions,
+  SubscribedSubreddit,
+} from "@/types/reddit.js";
+import type {
+  RedditConfigData,
+  RedditNotification as ConfigRedditNotification,
+  SubredditInfo,
+} from "../../types/config.js";
 import { RedditAuthService } from "./reddit-auth-service.js";
 import { RedditPostService } from "./reddit-post-service.js";
 import { RedditSubredditService } from "./reddit-subreddit-service.js";
-import { RedditTransformService } from "./reddit-transform-service.js";
+import { transformToConfigNotification } from "../../utils/reddit-transformers.js";
 
 /**
  * Main service for interacting with the Reddit API
@@ -25,22 +34,14 @@ export class RedditService {
   private authService: RedditAuthService;
   private postService: RedditPostService;
   private subredditService: RedditSubredditService;
-  private transformService: RedditTransformService;
 
   private constructor() {
     const config = this.loadConfig();
     this.authService = new RedditAuthService(config);
-    this.transformService = new RedditTransformService();
-    this.postService = new RedditPostService(
-      this.baseUrl,
-      this.authService,
-      this.transformService,
-      this.rateLimitDelay,
-    );
+    this.postService = new RedditPostService(this.baseUrl, this.authService, this.rateLimitDelay);
     this.subredditService = new RedditSubredditService(
       this.baseUrl,
       this.authService,
-      this.transformService,
       this.rateLimitDelay,
     );
   }
@@ -133,6 +134,116 @@ export class RedditService {
   public async getSubredditInfo(subreddit: string) {
     this.checkInitialized();
     return this.subredditService.getSubredditInfo(subreddit);
+  }
+
+  /**
+   * Fetches a single Reddit post by its ID
+   * @param postId The ID of the post to fetch
+   * @returns The fetched post with comments
+   */
+  public async fetchPostById(postId: string): Promise<RedditPostWithComments> {
+    this.checkInitialized();
+    return this.postService.fetchPostById(postId);
+  }
+
+  /**
+   * Fetches user notifications (inbox items) from Reddit
+   * @param options Options for fetching notifications
+   * @returns Array of notifications
+   */
+  public async fetchNotifications(
+    options: FetchNotificationsOptions = {},
+  ): Promise<ApiRedditNotification[]> {
+    this.checkInitialized();
+    return this.postService.fetchNotifications(options);
+  }
+
+  /**
+   * Fetches the list of subreddits the authenticated user is subscribed to
+   * @param options Options for fetching subscribed subreddits
+   * @returns Array of subscribed subreddits
+   */
+  public async fetchSubscribedSubreddits(
+    options: FetchSubscribedSubredditsOptions = {},
+  ): Promise<SubscribedSubreddit[]> {
+    this.checkInitialized();
+    return this.subredditService.fetchSubscribedSubreddits(options);
+  }
+
+  public async fetchUserInfo() {
+    this.checkInitialized();
+    return this.authService.fetchUserInfo();
+  }
+
+  public async fetchUserPreferences() {
+    this.checkInitialized();
+    return this.authService.fetchUserPreferences();
+  }
+
+  /**
+   * Formats a notification for the config response
+   */
+  private formatNotification(notification: ApiRedditNotification): ConfigRedditNotification {
+    return transformToConfigNotification(notification);
+  }
+
+  /**
+   * Formats subreddit info for the config response
+   */
+  private formatSubredditInfo = (subreddit: SubscribedSubreddit): SubredditInfo => {
+    return {
+      id: subreddit.id,
+      name: subreddit.name,
+      display_name: subreddit.displayName,
+      title: subreddit.title,
+      description: subreddit.description,
+      subscribers: subreddit.subscribers,
+      created_utc: subreddit.createdUtc,
+      url: subreddit.url,
+      over18: subreddit.isNsfw,
+      user_is_subscriber: true, // Since this is from subscribed subreddits
+      user_is_moderator: false, // We don't have this info from the subscribed endpoint
+      rules: [], // Rules are not included in the subscribed endpoint
+      post_requirements: undefined, // Post requirements are not included in the subscribed endpoint
+    };
+  };
+
+  /**
+   * Gets the complete Reddit configuration including user info, notifications,
+   * and subscribed subreddits
+   */
+  public async getRedditConfig(): Promise<RedditConfigData> {
+    this.checkInitialized();
+
+    try {
+      // Fetch all required data in parallel
+      const [notifications, subscribedSubreddits, userInfo, userPreferences] = await Promise.all([
+        this.fetchNotifications({ filter: "all", limit: 10, markRead: false }),
+        this.fetchSubscribedSubreddits({ limit: 50 }),
+        this.fetchUserInfo(),
+        this.fetchUserPreferences(),
+      ]);
+
+      // Format the data according to our schema
+      return {
+        notifications: notifications.map((n) => this.formatNotification(n)),
+        subscribedSubreddits: subscribedSubreddits.map(this.formatSubredditInfo),
+        user: {
+          ...userInfo,
+          preferences: userPreferences,
+        },
+        search: {
+          recent_searches: [], // This would need to be persisted separately
+          trending_searches: [], // This would need to be fetched from a trending API
+          search_suggestions: [], // This would need to be implemented with search API
+        },
+      };
+    } catch (error) {
+      throw new RedditError(
+        `Failed to fetch Reddit configuration: ${error instanceof Error ? error.message : error}`,
+        "API_ERROR",
+      );
+    }
   }
 
   private checkInitialized() {

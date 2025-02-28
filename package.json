@@ -1,16 +1,16 @@
 {
   "name": "systemprompt-mcp-reddit",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "A specialized Model Context Protocol (MCP) server that enables you to search, read, and interact with Reddit content, leveraging an AI Agent to help with each operation.",
   "type": "module",
   "bin": {
-    "systemprompt-mcp-reddit": "./build/index.js"
+    "systemprompt-mcp-reddit": "build/index.js"
   },
   "files": [
     "build"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias && chmod +x build/index.js",
     "prepare": "npm run build",
     "watch": "tsc --watch",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Ejb503/systemprompt-mcp-reddit"
+    "url": "git+https://github.com/Ejb503/systemprompt-mcp-reddit.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
@@ -47,6 +47,7 @@
     "ts-jest": "^29.1.2",
     "ts-jest-resolver": "^2.0.1",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.11",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
     "typescript-json-schema": "^0.63.0"

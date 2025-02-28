@@ -1,6 +1,6 @@
 import type { Prompt } from "@modelcontextprotocol/sdk/types.js";
 import type { JSONSchema7TypeName } from "json-schema";
-import type { SystempromptPromptResponse } from "../types/index.js";
+import type { SystempromptPromptResponse } from "@/types/index.js";
 
 // Basic mock with simple string input
 export const mockSystemPromptResult: SystempromptPromptResponse = {
@@ -60,8 +60,7 @@ export const mockArrayPromptResult: SystempromptPromptResponse = {
   instruction: {
     dynamic: "",
     state: "",
-    static:
-      "You are a helpful assistant that helps users manage their todo lists.",
+    static: "You are a helpful assistant that helps users manage their todo lists.",
   },
   input: {
     name: "todos",
@@ -125,8 +124,7 @@ export const mockNestedPromptResult: SystempromptPromptResponse = {
   instruction: {
     dynamic: "",
     state: "",
-    static:
-      "You are a helpful assistant that helps users manage their contacts.",
+    static: "You are a helpful assistant that helps users manage their contacts.",
   },
   input: {
     name: "contact",

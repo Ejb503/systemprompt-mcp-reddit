@@ -1,11 +1,4 @@
-import {
-  jest,
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from "@jest/globals";
+import { jest, describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import type { SpyInstance } from "jest-mock";
 import { SystemPromptService } from "../systemprompt-service";
 import type {
@@ -17,7 +10,7 @@ import type {
   SystempromptBlockRequest,
   SystempromptAgentRequest,
   Metadata,
-} from "../../types/index.js";
+} from "../@/types/index.js";
 
 describe("SystemPromptService", () => {
   const mockApiKey = "test-api-key";
@@ -30,68 +23,62 @@ describe("SystemPromptService", () => {
     // Reset fetch mock
     fetchSpy = jest
       .spyOn(global, "fetch")
-      .mockImplementation(
-        async (input: string | URL | Request, init?: RequestInit) => {
-          const url =
-            input instanceof URL ? input.toString() : input.toString();
+      .mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+        const url = input instanceof URL ? input.toString() : input.toString();
 
-          // Handle error cases
-          if (url.includes("invalid-api-key")) {
-            return new Response(
-              JSON.stringify({ message: "Invalid API key" }),
-              {
-                status: 403,
-                headers: { "Content-Type": "application/json" },
-              }
-            );
-          }
-
-          if (url.includes("not-found")) {
-            return new Response(
-              JSON.stringify({
-                message: "Resource not found - it may have been deleted",
-              }),
-              { status: 404, headers: { "Content-Type": "application/json" } }
-            );
-          }
-
-          if (url.includes("conflict")) {
-            return new Response(
-              JSON.stringify({
-                message: "Resource conflict - it may have been edited",
-              }),
-              { status: 409, headers: { "Content-Type": "application/json" } }
-            );
-          }
-
-          if (url.includes("bad-request")) {
-            return new Response(JSON.stringify({ message: "Invalid data" }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-
-          if (url.includes("invalid-json")) {
-            return new Response("invalid json", {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-
-          // Handle successful cases
-          if (init?.method === "DELETE") {
-            return new Response(null, { status: 204 });
-          }
-
-          return new Response(JSON.stringify({ data: "test" }), {
-            status: 200,
-            statusText: "OK",
-            headers: new Headers({
-              "Content-Type": "application/json",
-            }),
+        // Handle error cases
+        if (url.includes("invalid-api-key")) {
+          return new Response(JSON.stringify({ message: "Invalid API key" }), {
+            status: 403,
+            headers: { "Content-Type": "application/json" },
           });
         }
-      );
+
+        if (url.includes("not-found")) {
+          return new Response(
+            JSON.stringify({
+              message: "Resource not found - it may have been deleted",
+            }),
+            { status: 404, headers: { "Content-Type": "application/json" } },
+          );
+        }
+
+        if (url.includes("conflict")) {
+          return new Response(
+            JSON.stringify({
+              message: "Resource conflict - it may have been edited",
+            }),
+            { status: 409, headers: { "Content-Type": "application/json" } },
+          );
+        }
+
+        if (url.includes("bad-request")) {
+          return new Response(JSON.stringify({ message: "Invalid data" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        if (url.includes("invalid-json")) {
+          return new Response("invalid json", {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        // Handle successful cases
+        if (init?.method === "DELETE") {
+          return new Response(null, { status: 204 });
+        }
+
+        return new Response(JSON.stringify({ data: "test" }), {
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({
+            "Content-Type": "application/json",
+          }),
+        });
+      });
   });
 
   afterEach(() => {
@@ -112,14 +99,12 @@ describe("SystemPromptService", () => {
     });
 
     it("should throw error if initialized without API key", () => {
-      expect(() => SystemPromptService.initialize("")).toThrow(
-        "API key is required"
-      );
+      expect(() => SystemPromptService.initialize("")).toThrow("API key is required");
     });
 
     it("should throw error if getInstance called before initialization", () => {
       expect(() => SystemPromptService.getInstance()).toThrow(
-        "SystemPromptService must be initialized with an API key first"
+        "SystemPromptService must be initialized with an API key first",
       );
     });
   });
@@ -144,7 +129,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": mockApiKey,
           },
-        })
+        }),
       );
     });
 
@@ -180,7 +165,7 @@ describe("SystemPromptService", () => {
             "api-key": mockApiKey,
           },
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -194,7 +179,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": mockApiKey,
           },
-        })
+        }),
       );
     });
 
@@ -204,21 +189,21 @@ describe("SystemPromptService", () => {
           new Response(JSON.stringify({ message: "Invalid API key" }), {
             status: 403,
             headers: { "Content-Type": "application/json" },
-          })
-        )
+          }),
+        ),
       );
       await expect(service.getAllPrompts()).rejects.toThrow("Invalid API key");
     });
 
     it("should handle not found error", async () => {
       await expect(service.getBlock("not-found")).rejects.toThrow(
-        "Resource not found - it may have been deleted"
+        "Resource not found - it may have been deleted",
       );
     });
 
     it("should handle conflict error", async () => {
       await expect(service.editPrompt("conflict", {})).rejects.toThrow(
-        "Resource conflict - it may have been edited"
+        "Resource conflict - it may have been edited",
       );
     });
 
@@ -228,8 +213,8 @@ describe("SystemPromptService", () => {
           new Response(JSON.stringify({ message: "Invalid data" }), {
             status: 400,
             headers: { "Content-Type": "application/json" },
-          })
-        )
+          }),
+        ),
       );
       const invalidData: SystempromptPromptRequest = {
         metadata: {
@@ -243,18 +228,12 @@ describe("SystemPromptService", () => {
         },
         instruction: { static: "Test instruction" },
       };
-      await expect(service.createPrompt(invalidData)).rejects.toThrow(
-        "Invalid data"
-      );
+      await expect(service.createPrompt(invalidData)).rejects.toThrow("Invalid data");
     });
 
     it("should handle network error", async () => {
-      fetchSpy.mockImplementationOnce(() =>
-        Promise.reject(new Error("Failed to fetch"))
-      );
-      await expect(service.getAllPrompts()).rejects.toThrow(
-        "API request failed"
-      );
+      fetchSpy.mockImplementationOnce(() => Promise.reject(new Error("Failed to fetch")));
+      await expect(service.getAllPrompts()).rejects.toThrow("API request failed");
     });
 
     it("should handle JSON parse error", async () => {
@@ -263,12 +242,10 @@ describe("SystemPromptService", () => {
           new Response("invalid json", {
             status: 200,
             headers: { "Content-Type": "application/json" },
-          })
-        )
+          }),
+        ),
       );
-      await expect(service.getAllPrompts()).rejects.toThrow(
-        "Failed to parse API response"
-      );
+      await expect(service.getAllPrompts()).rejects.toThrow("Failed to parse API response");
     });
   });
 
@@ -282,7 +259,7 @@ describe("SystemPromptService", () => {
         new Response(JSON.stringify({}), {
           status: 200,
           headers: { "Content-Type": "application/json" },
-        })
+        }),
       );
     });
 
@@ -296,7 +273,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": "test-api-key",
           },
-        })
+        }),
       );
     });
 
@@ -330,7 +307,7 @@ describe("SystemPromptService", () => {
             "api-key": "test-api-key",
           },
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -355,7 +332,7 @@ describe("SystemPromptService", () => {
             "api-key": "test-api-key",
           },
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -369,7 +346,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": "test-api-key",
           },
-        })
+        }),
       );
     });
 
@@ -392,7 +369,7 @@ describe("SystemPromptService", () => {
             "api-key": "test-api-key",
           },
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -413,7 +390,7 @@ describe("SystemPromptService", () => {
             "api-key": "test-api-key",
           },
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -427,7 +404,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": "test-api-key",
           },
-        })
+        }),
       );
     });
 
@@ -441,7 +418,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": "test-api-key",
           },
-        })
+        }),
       );
     });
 
@@ -455,7 +432,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": "test-api-key",
           },
-        })
+        }),
       );
     });
 
@@ -477,7 +454,7 @@ describe("SystemPromptService", () => {
             "api-key": "test-api-key",
           },
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -498,7 +475,7 @@ describe("SystemPromptService", () => {
             "api-key": "test-api-key",
           },
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -512,7 +489,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": "test-api-key",
           },
-        })
+        }),
       );
     });
 
@@ -526,7 +503,7 @@ describe("SystemPromptService", () => {
             "Content-Type": "application/json",
             "api-key": "test-api-key",
           },
-        })
+        }),
       );
     });
   });
