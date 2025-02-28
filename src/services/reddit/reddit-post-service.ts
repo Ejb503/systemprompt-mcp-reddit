@@ -104,12 +104,12 @@ export class RedditPostService extends RedditFetchService {
   public async createPost(params: RedditPostParams): Promise<RedditPostResponse> {
     const { subreddit, title, kind, content, url } = params;
 
-    if (kind === "link" && !url) {
-      throw new RedditError("URL is required for link posts", "VALIDATION_ERROR");
+    if (kind === "self" && !content) {
+      throw new RedditError("Content is required for text posts", "VALIDATION_ERROR");
     }
 
-    if (kind === "text" && !content) {
-      throw new RedditError("Content is required for text posts", "VALIDATION_ERROR");
+    if (kind === "link" && !url) {
+      throw new RedditError("URL is required for link posts", "VALIDATION_ERROR");
     }
 
     const formData = new URLSearchParams();

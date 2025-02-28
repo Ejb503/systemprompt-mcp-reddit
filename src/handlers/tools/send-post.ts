@@ -1,17 +1,27 @@
-import { ToolHandler, SendRedditPostArgs, formatToolResponse } from "./types.js";
-import { RedditError } from "@/types/reddit.js";
+import { ToolHandler, formatToolResponse } from "./types.js";
+import { RedditError, RedditPostParams } from "@/types/reddit.js";
 import { sendRedditPostSuccessMessage } from "@/constants/tool/send-post.js";
 import { JSONSchema7 } from "json-schema";
+
+interface SendPostArgs {
+  messageId: string;
+  subreddit: string;
+  title: string;
+  content?: string;
+  kind?: "self" | "link";
+  url?: string;
+}
 
 const postResponseSchema: JSONSchema7 = {
   type: "object",
   properties: {
     id: { type: "string" },
-    name: { type: "string" },
     url: { type: "string" },
+    title: { type: "string" },
+    subreddit: { type: "string" },
     permalink: { type: "string" },
   },
-  required: ["id"],
+  required: ["id", "url", "title", "subreddit", "permalink"],
 };
 
 const responseSchema: JSONSchema7 = {
@@ -30,46 +40,42 @@ const responseSchema: JSONSchema7 = {
   required: ["status", "message", "result"],
 };
 
-export const handleSendRedditPost: ToolHandler<SendRedditPostArgs> = async (
-  args,
-  { redditService },
-) => {
+export const handleSendPost: ToolHandler<SendPostArgs> = async (args, { redditService }) => {
   if (!args.messageId) {
     throw new RedditError("messageId is required for sending posts", "VALIDATION_ERROR");
   }
 
   try {
-    const { subreddit, title, content, kind = "text", url } = args;
+    const { subreddit, title, content, kind = "self", url } = args;
 
     if (!subreddit || !title) {
-      throw new RedditError(
-        "subreddit and title are required for sending posts",
-        "VALIDATION_ERROR",
-      );
+      throw new RedditError("Missing required fields", "VALIDATION_ERROR");
     }
 
-    const post = await redditService.createPost({
+    const postKind: RedditPostParams["kind"] = kind || (url ? "link" : "self");
+    const postParams: RedditPostParams = {
       subreddit,
       title,
+      kind: postKind,
       content,
-      kind,
       url,
-    });
+    };
+
+    const post = await redditService.createPost(postParams);
 
     return formatToolResponse({
+      status: "success",
       message: sendRedditPostSuccessMessage,
-      result: {
-        post,
-      },
+      result: { post },
       schema: responseSchema,
       type: "server",
       title: "Send Reddit Post",
     });
   } catch (error) {
-    console.error("Failed to send Reddit post:", error);
+    console.error("Failed to send post:", error);
     return formatToolResponse({
       status: "error",
-      message: `Failed to send Reddit post: ${error instanceof Error ? error.message : "Unknown error"}`,
+      message: `Failed to send post: ${error instanceof Error ? error.message : "Unknown error"}`,
       error: {
         type: error instanceof RedditError ? error.type : "API_ERROR",
         details: error,

@@ -4,6 +4,8 @@ import {
   RedditError,
   RedditPostParams,
   RedditPostResponse,
+  RedditReplyParams,
+  RedditReplyResponse,
   FetchPostsOptions,
   RedditPostWithComments,
   RedditNotification as ApiRedditNotification,
@@ -124,9 +126,35 @@ export class RedditService {
 
   /**
    * Creates a new post on Reddit
+   * @throws {RedditError} if post creation fails or validation fails
    */
   public async createPost(params: RedditPostParams): Promise<RedditPostResponse> {
     this.checkInitialized();
+
+    // Validate title length
+    if (params.title.length < 1 || params.title.length > 300) {
+      throw new RedditError("Post title must be between 1 and 300 characters", "VALIDATION_ERROR");
+    }
+
+    // Validate content based on post type
+    if (params.kind === "self" && (!params.content || params.content.length === 0)) {
+      throw new RedditError("Content is required for text posts", "VALIDATION_ERROR");
+    }
+    if (params.kind === "link" && (!params.url || !params.url.startsWith("http"))) {
+      throw new RedditError("Valid URL is required for link posts", "VALIDATION_ERROR");
+    }
+
+    // Get subreddit requirements
+    const subredditInfo = await this.getSubredditInfo(params.subreddit);
+
+    // Check if flair is required
+    if (subredditInfo.flairRequired && !params.flair_id && !params.flair_text) {
+      throw new RedditError(
+        `Flair is required for posts in r/${params.subreddit}`,
+        "VALIDATION_ERROR",
+      );
+    }
+
     return this.postService.createPost(params);
   }
 
@@ -281,13 +309,29 @@ export class RedditService {
 
   /**
    * Sends a reply to a post or comment
-   * @param parentId The ID of the parent post or comment
-   * @param text The content of the reply
-   * @returns The API response
+   * @param params Reply parameters including parent ID and text
+   * @throws {RedditError} if reply fails or validation fails
    */
-  public async sendReply(parentId: string, text: string): Promise<any> {
+  public async sendReply(params: RedditReplyParams): Promise<RedditReplyResponse> {
     this.checkInitialized();
-    return this.postService.sendReply(parentId, text);
+
+    // Validate parent_id format
+    if (!params.parent_id.match(/^t[1|3]_[a-z0-9]+$/i)) {
+      throw new RedditError(
+        "Invalid parent_id format. Must start with t1_ for comments or t3_ for posts",
+        "VALIDATION_ERROR",
+      );
+    }
+
+    // Validate text length (Reddit's limit is 10000 characters)
+    if (!params.text || params.text.length === 0 || params.text.length > 10000) {
+      throw new RedditError(
+        "Reply text must be between 1 and 10000 characters",
+        "VALIDATION_ERROR",
+      );
+    }
+
+    return this.postService.sendReply(params.parent_id, params.text);
   }
 
   private checkInitialized() {

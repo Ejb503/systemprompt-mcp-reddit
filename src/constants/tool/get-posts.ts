@@ -1,7 +1,7 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export const getPosts: Tool = {
-  name: "get_reddit_posts",
+  name: "get_posts",
   description: "Fetches posts from configured subreddits using saved preferences",
   inputSchema: {
     type: "object",

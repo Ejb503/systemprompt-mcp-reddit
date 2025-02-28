@@ -98,19 +98,80 @@ export interface RedditAuthResponse {
   error?: string;
 }
 
+/**
+ * Parameters for creating a new Reddit post
+ * Matches Reddit's /api/submit endpoint requirements
+ */
 export interface RedditPostParams {
+  /** Subreddit to post to (without r/ prefix) */
   subreddit: string;
+  /** Post title (1-300 characters) */
   title: string;
-  kind: "text" | "link";
+  /** Type of post - 'self' for text posts, 'link' for URL posts */
+  kind: "self" | "link";
+  /** Text content for self posts */
   content?: string;
+  /** URL for link posts */
   url?: string;
+  /** Flair ID if the subreddit requires it */
+  flair_id?: string;
+  /** Flair text if the subreddit requires it */
+  flair_text?: string;
+  /** Whether to send replies to inbox */
+  sendreplies?: boolean;
+  /** Whether to mark as NSFW */
+  nsfw?: boolean;
+  /** Whether to mark as spoiler */
+  spoiler?: boolean;
 }
 
+/**
+ * Response from creating a post
+ * Matches Reddit's /api/submit response
+ */
 export interface RedditPostResponse {
+  /** Post ID with t3_ prefix */
   id: string;
+  /** Full reddit URL to the post */
   url: string;
+  /** Post title */
   title: string;
+  /** Subreddit the post was created in */
   subreddit: string;
+  /** Full permalink */
+  permalink: string;
+}
+
+/**
+ * Parameters for sending a reply
+ * Used for both comments and post replies
+ */
+export interface RedditReplyParams {
+  /**
+   * ID of parent thing to reply to, with prefix
+   * t1_ prefix for replying to comments
+   * t3_ prefix for replying to posts
+   */
+  parent_id: string;
+  /** The markdown text of the comment (10000 char max) */
+  text: string;
+  /** Whether to send reply notifications */
+  sendreplies?: boolean;
+}
+
+/**
+ * Response from creating a reply
+ * Matches Reddit's comment creation response
+ */
+export interface RedditReplyResponse {
+  /** Comment ID with t1_ prefix */
+  id: string;
+  /** Parent ID that was replied to */
+  parent_id: string;
+  /** The created comment's text */
+  body: string;
+  /** Full permalink to the comment */
+  permalink: string;
 }
 
 export interface SubredditRulesResponse {

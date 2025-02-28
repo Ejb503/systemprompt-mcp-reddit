@@ -1,5 +1,5 @@
 import { ToolHandler, SendReplyArgs, formatToolResponse } from "./types.js";
-import { RedditError } from "@/types/reddit.js";
+import { RedditError, RedditReplyParams } from "@/types/reddit.js";
 import { sendReplySuccessMessage } from "@/constants/tool/send-reply.js";
 import { JSONSchema7 } from "json-schema";
 
@@ -15,10 +15,11 @@ const replyResponseSchema: JSONSchema7 = {
           type: "object",
           properties: {
             id: { type: "string" },
-            name: { type: "string" },
+            parent_id: { type: "string" },
+            body: { type: "string" },
             permalink: { type: "string" },
           },
-          required: ["id"],
+          required: ["id", "parent_id", "body", "permalink"],
         },
       },
       required: ["response"],
@@ -38,7 +39,13 @@ export const handleSendReply: ToolHandler<SendReplyArgs> = async (args, { reddit
       );
     }
 
-    const response = await redditService.sendReply(parentId, content);
+    const replyParams: RedditReplyParams = {
+      parent_id: parentId,
+      text: content,
+      sendreplies: true,
+    };
+
+    const response = await redditService.sendReply(replyParams);
 
     return formatToolResponse({
       message: sendReplySuccessMessage,

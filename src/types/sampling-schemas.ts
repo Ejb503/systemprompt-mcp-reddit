@@ -13,7 +13,7 @@ export const REDDIT_POST_RESPONSE_SCHEMA: JSONSchema7 = {
     },
     kind: {
       type: "string",
-      enum: ["text", "link"],
+      enum: ["self", "link"],
       description: "Type of post",
     },
     subreddit: {

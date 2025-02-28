@@ -115,7 +115,7 @@ export interface ConfigureInstructionsArgs {
 export interface CreateRedditPostArgs {
   subreddit: string;
   content: string;
-  kind?: "text" | "link";
+  kind?: "self" | "link";
   url?: string;
 }
 
@@ -130,7 +130,7 @@ export interface SendRedditPostArgs {
   subreddit: string;
   title: string;
   content?: string;
-  kind?: "text" | "link";
+  kind?: "self" | "link";
   url?: string;
 }
 

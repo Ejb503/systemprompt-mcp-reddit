@@ -42,7 +42,7 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
       type: "post", // Explicitly set the type for the prompt
-      kind: "text", // Always force text posts
+      kind: "self", // Always force text posts
       redditConfig: redditConfigBlock.content,
       redditInstructions: instructionsBlock.content,
     };

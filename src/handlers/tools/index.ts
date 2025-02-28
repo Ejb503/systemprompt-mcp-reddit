@@ -36,7 +36,7 @@ export { handleGetRedditNotifications } from "./get-notifications.js";
 export { handleAnalyseSubreddit } from "./analyse-subreddit.js";
 export { handleCreateRedditPost } from "./create-post.js";
 export { handleCreateRedditReply } from "./create-reply.js";
-export { handleSendRedditPost } from "./send-post.js";
+export { handleSendPost } from "./send-post.js";
 export { handleSearchReddit } from "./search-reddit.js";
 export { handleSendReply } from "./send-reply.js";
 export { handleGetComment } from "./get-comment.js";

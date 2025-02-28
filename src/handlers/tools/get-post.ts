@@ -101,7 +101,6 @@ export const handleGetPost: ToolHandler<GetPostArgs> = async (args, { redditServ
       title: "Reddit Post",
     });
   } catch (error) {
-    console.error("Failed to fetch Reddit post:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to fetch Reddit post: ${error instanceof Error ? error.message : "Unknown error"}`,

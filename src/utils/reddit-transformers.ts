@@ -219,6 +219,7 @@ export const transformToConfigNotification = (
     title: notification.subject,
     body: notification.body,
     author: notification.author,
+    content_id: notification.postId || notification.commentId || "",
     permalink: notification.permalink || "",
     unread: notification.isNew,
   };
