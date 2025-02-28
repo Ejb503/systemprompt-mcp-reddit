@@ -17,7 +17,7 @@ import { SystemPromptService } from "./services/systemprompt-service.js";
 import { sendSamplingRequest } from "./handlers/sampling.js";
 import { server } from "./server.js";
 import { RedditService } from "./services/reddit/reddit-service.js";
-import { sendJsonResultNotification } from "./handlers/notifications.js";
+import { sendRedditConfigNotification } from "./handlers/notifications.js";
 
 export async function main() {
   config();
@@ -54,10 +54,8 @@ export async function main() {
 
   try {
     await redditService.initialize();
-
-    // Fetch and send the Reddit configuration data
     const configData = await redditService.getRedditConfig();
-    sendJsonResultNotification(JSON.stringify(configData, null, 2));
+    sendRedditConfigNotification(JSON.stringify(configData, null, 2));
   } catch (error) {
     throw new Error(
       `Failed to connect to Reddit API: ${error instanceof Error ? error.message : error}`,

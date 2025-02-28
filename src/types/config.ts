@@ -20,6 +20,7 @@ export interface SubredditInfo {
   created_utc: number;
   url: string;
   over18: boolean;
+  icon_img?: string;
   user_is_subscriber: boolean;
   user_is_moderator: boolean;
   rules?: SubredditRule[];
@@ -152,12 +153,6 @@ export interface RedditConfigData {
   notifications: RedditNotification[];
   subscribedSubreddits: SubredditInfo[];
   user: UserInfo;
-  search?: {
-    recent_searches: string[];
-    current_search?: SearchResults;
-    trending_searches?: string[];
-    search_suggestions?: string[];
-  };
 }
 
 // Mock data for testing and development
@@ -196,6 +191,7 @@ export const mockRedditConfig: RedditConfigData = {
       created_utc: 1201832000,
       url: "/r/programming/",
       over18: false,
+      icon_img: "https://styles.redditmedia.com/t5_2fwo/styles/communityIcon_1bqa1ibfp8q11.png",
       user_is_subscriber: true,
       user_is_moderator: false,
       rules: [
@@ -239,66 +235,5 @@ export const mockRedditConfig: RedditConfigData = {
       theme: "dark",
       language: "en",
     },
-  },
-  search: {
-    recent_searches: ["typescript tutorial", "react best practices"],
-    current_search: {
-      query: "typescript tutorial",
-      filters: {
-        time: "month",
-        sort: "relevance",
-        restrict_sr: true,
-        limit: 25,
-      },
-      posts: {
-        results: [
-          {
-            id: "post789",
-            title: "Complete TypeScript Tutorial 2024",
-            author: "typescript_guru",
-            subreddit: "typescript",
-            created_utc: 1647532800,
-            score: 1500,
-            num_comments: 45,
-            permalink: "/r/typescript/comments/post789",
-            url: "https://example.com/typescript-tutorial",
-            is_self: true,
-            is_video: false,
-            selftext: "A comprehensive guide to TypeScript...",
-            flair: {
-              text: "Tutorial",
-              background_color: "#e6f3ff",
-              text_color: "#0066cc",
-            },
-          },
-        ],
-        total_count: 1,
-        next_page_token: "next_page_123",
-      },
-      subreddits: {
-        results: [
-          {
-            id: "sr456",
-            name: "typescript",
-            display_name: "TypeScript",
-            title: "TypeScript Community",
-            description: "TypeScript programming language community",
-            subscribers: 100000,
-            created_utc: 1340150400,
-            over18: false,
-            user_is_subscriber: true,
-            icon_img: "https://example.com/typescript-icon.png",
-            active_user_count: 1200,
-          },
-        ],
-        total_count: 1,
-      },
-    },
-    trending_searches: ["react 19", "typescript 5.0", "web development"],
-    search_suggestions: [
-      "typescript tutorial beginner",
-      "typescript tutorial advanced",
-      "typescript project ideas",
-    ],
   },
 };

@@ -201,6 +201,7 @@ export class RedditService {
       created_utc: subreddit.createdUtc,
       url: subreddit.url,
       over18: subreddit.isNsfw,
+      icon_img: subreddit.icon,
       user_is_subscriber: true, // Since this is from subscribed subreddits
       user_is_moderator: false, // We don't have this info from the subscribed endpoint
       rules: [], // Rules are not included in the subscribed endpoint
@@ -231,11 +232,6 @@ export class RedditService {
         user: {
           ...userInfo,
           preferences: userPreferences,
-        },
-        search: {
-          recent_searches: [], // This would need to be persisted separately
-          trending_searches: [], // This would need to be fetched from a trending API
-          search_suggestions: [], // This would need to be implemented with search API
         },
       };
     } catch (error) {
