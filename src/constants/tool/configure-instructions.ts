@@ -15,5 +15,10 @@ export const configureInstructions: Tool = {
   },
   _meta: {
     hidden: false,
+    displayTitle: "Configure Instructions",
+    type: "api",
   },
 };
+
+export const configureInstructionsSuccessMessage =
+  "The user has successfully configured the instructions for how the LLM should write Reddit content. Present the instructions to the user.";

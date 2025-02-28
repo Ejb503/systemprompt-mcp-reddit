@@ -11,14 +11,17 @@ import { SystemPromptService } from "@/services/systemprompt-service.js";
 import { validateWithErrors } from "@/utils/validation.js";
 import { JSONSchema7 } from "json-schema";
 import {
-  handleConfigureInstructions,
   handleGetChannelPosts,
-  handleGetPost,
   handleGetRedditNotifications,
   handleAnalyseSubreddit,
   handleCreateRedditPost,
   handleCreateRedditReply,
   handleSendRedditPost,
+  handleGetPost,
+  handleConfigureInstructions,
+  handleSearchReddit,
+  handleSendReply,
+  handleGetComment,
   GetChannelPostsArgs,
   GetPostArgs,
   GetRedditNotificationsArgs,
@@ -26,8 +29,11 @@ import {
   CreateRedditPostArgs,
   CreateRedditReplyArgs,
   SendRedditPostArgs,
+  SearchRedditArgs,
+  ConfigureInstructionsArgs,
+  SendReplyArgs,
+  GetCommentArgs,
 } from "./tools/index.js";
-import { ConfigureInstructionsArgs } from "@/types/tool-schemas.js";
 
 type ToolArgs = {
   configure_instructions: ConfigureInstructionsArgs;
@@ -38,6 +44,9 @@ type ToolArgs = {
   create_reddit_post: CreateRedditPostArgs;
   create_reddit_reply: CreateRedditReplyArgs;
   send_reddit_post: SendRedditPostArgs;
+  search_reddit: SearchRedditArgs;
+  send_reply: SendReplyArgs;
+  get_comment: GetCommentArgs;
 };
 
 export async function handleListTools(request: ListToolsRequest): Promise<ListToolsResult> {
@@ -69,22 +78,28 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
     const args = request.params.arguments as ToolArgs[keyof ToolArgs];
 
     switch (request.params.name) {
-      case "configure_instructions":
-        return await handleConfigureInstructions(args as ConfigureInstructionsArgs, context);
-      case "get_channel_posts":
-        return await handleGetChannelPosts(args as GetChannelPostsArgs, context);
-      case "get_post":
-        return await handleGetPost(args as GetPostArgs, context);
-      case "get_reddit_notifications":
-        return await handleGetRedditNotifications(args as GetRedditNotificationsArgs, context);
       case "analyse_subreddit":
         return await handleAnalyseSubreddit(args as AnalyseSubredditArgs, context);
-      case "create_reddit_post":
+      case "configure_instructions":
+        return await handleConfigureInstructions(args as ConfigureInstructionsArgs, context);
+      case "create_post":
         return await handleCreateRedditPost(args as CreateRedditPostArgs, context);
-      case "create_reddit_reply":
+      case "create_reply":
         return await handleCreateRedditReply(args as CreateRedditReplyArgs, context);
-      case "send_reddit_post":
+      case "fetch_post":
+        return await handleGetPost(args as GetPostArgs, context);
+      case "get_notifications":
+        return await handleGetRedditNotifications(args as GetRedditNotificationsArgs, context);
+      case "get_posts":
+        return await handleGetChannelPosts(args as GetChannelPostsArgs, context);
+      case "search_reddit":
+        return await handleSearchReddit(args as SearchRedditArgs, context);
+      case "send_post":
         return await handleSendRedditPost(args as SendRedditPostArgs, context);
+      case "send_reply":
+        return await handleSendReply(args as SendReplyArgs, context);
+      case "get_comment":
+        return await handleGetComment(args as GetCommentArgs, context);
       default:
         throw new Error(`${TOOL_ERROR_MESSAGES.UNKNOWN_TOOL} ${request.params.name}`);
     }

@@ -1,8 +1,9 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export const createRedditReply: Tool = {
-  name: "create_reddit_reply",
-  description: "Creates a reply to a Reddit post or comment. This will not post to Reddit.",
+  name: "create_reply",
+  description:
+    "Creates a reply to a Reddit post or comment. This will not post to Reddit. it will create a draft that can be edited and sent manually below",
   inputSchema: {
     type: "object",
     properties: {
@@ -22,6 +23,12 @@ export const createRedditReply: Tool = {
     required: ["subreddit", "content", "messageId"],
   },
   _meta: {
-    hidden: false,
+    hidden: true,
+    displayTitle: "Create Reply",
+    type: "api",
+    callback: "create_reddit_reply",
   },
 };
+
+export const createRedditReplySuccessMessage =
+  "The user has successfully created a reply to a Reddit post or comment. Present the reply to the user and congratulate them on their reply.";

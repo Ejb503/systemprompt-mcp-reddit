@@ -6,11 +6,11 @@ import {
   RedditPostResponse,
   RedditApiResponse,
   FetchPostsOptions,
-  RedditComment,
   RedditCommentThread,
   RedditPostWithComments,
   RedditNotification,
   FetchNotificationsOptions,
+  RedditComment,
 } from "@/types/reddit.js";
 import { RedditFetchService } from "./reddit-fetch-service.js";
 import {
@@ -232,8 +232,13 @@ export class RedditPostService extends RedditFetchService {
           break;
       }
 
-      // Add limit parameter
-      endpoint += `?limit=${limit}`;
+      // Add parameters
+      const params = new URLSearchParams();
+      params.append("limit", limit.toString());
+      if (options.after) params.append("after", options.after);
+      if (options.before) params.append("before", options.before);
+
+      endpoint += `?${params.toString()}`;
 
       const data = await this.redditFetch<RedditApiResponse<any>>(endpoint);
 
@@ -241,7 +246,22 @@ export class RedditPostService extends RedditFetchService {
         return [];
       }
 
-      const notifications = data.data.children.map((item) => transformNotification(item.data));
+      let notifications = data.data.children.map((item) => transformNotification(item.data));
+
+      // Apply client-side filters
+      if (options.excludeIds?.length) {
+        notifications = notifications.filter((n) => !options.excludeIds?.includes(n.id));
+      }
+
+      if (options.excludeTypes?.length) {
+        notifications = notifications.filter((n) => !options.excludeTypes?.includes(n.type));
+      }
+
+      if (options.excludeSubreddits?.length) {
+        notifications = notifications.filter(
+          (n) => !n.subreddit || !options.excludeSubreddits?.includes(n.subreddit),
+        );
+      }
 
       if (options.markRead && notifications.length > 0 && filter !== "unread") {
         const ids = notifications.filter((n) => n.isNew).map((n) => n.id);
@@ -260,6 +280,25 @@ export class RedditPostService extends RedditFetchService {
     }
   }
 
+  public async deleteMessage(id: string): Promise<void> {
+    try {
+      const formData = new URLSearchParams({
+        id,
+      });
+
+      await this.redditFetch("/api/del_msg", {
+        method: "POST",
+        body: formData,
+      });
+    } catch (error) {
+      throw new RedditError(
+        `Failed to delete message: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "API_ERROR",
+        error,
+      );
+    }
+  }
+
   private async markMessagesRead(ids: string[]): Promise<void> {
     const formData = new URLSearchParams({
       id: ids.join(","),
@@ -269,5 +308,139 @@ export class RedditPostService extends RedditFetchService {
       method: "POST",
       body: formData,
     });
+  }
+
+  /**
+   * Fetches a single comment by its ID
+   * @param commentId - The ID of the comment to fetch
+   * @returns Promise<RedditComment>
+   */
+  public async fetchCommentById(commentId: string): Promise<RedditComment> {
+    try {
+      // Reddit API requires the comment ID to be prefixed with t1_
+      const formattedId = commentId.startsWith("t1_") ? commentId : `t1_${commentId}`;
+
+      const endpoint = `/api/info.json?id=${formattedId}`;
+      const response = await this.redditFetch<RedditApiResponse<RedditComment>>(endpoint);
+
+      if (!response.data.children || response.data.children.length === 0) {
+        throw new RedditError(`Comment with ID ${commentId} not found`, "API_ERROR");
+      }
+
+      return transformComment(response.data.children[0].data);
+    } catch (error) {
+      throw new RedditError(
+        `Failed to fetch comment: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "API_ERROR",
+        error,
+      );
+    }
+  }
+
+  /**
+   * Fetches a comment thread (comment with all its replies) by the comment ID and post ID
+   * @param postId - The ID of the post containing the comment
+   * @param commentId - The ID of the comment to fetch with its replies
+   * @returns Promise<RedditCommentThread>
+   */
+  public async fetchCommentThread(postId: string, commentId: string): Promise<RedditCommentThread> {
+    try {
+      // Remove t3_ prefix if present in postId
+      const rawPostId = postId.replace("t3_", "");
+      // Remove t1_ prefix if present in commentId
+      const rawCommentId = commentId.replace("t1_", "");
+
+      // Reddit API endpoint for fetching a specific comment thread
+      const endpoint = `/comments/${rawPostId}/comment/${rawCommentId}.json`;
+      const response = await this.redditFetch<any[]>(endpoint);
+
+      if (!response || response.length < 2 || !response[1].data.children?.[0]) {
+        throw new RedditError(`Comment thread not found`, "API_ERROR");
+      }
+
+      // The first comment in the thread is our target comment
+      const commentData = response[1].data.children[0];
+
+      if (commentData.kind !== "t1") {
+        throw new RedditError(`Invalid comment data received`, "API_ERROR");
+      }
+
+      const comment = transformComment(commentData.data);
+
+      // Process replies if they exist
+      let replies: RedditCommentThread[] = [];
+      if (
+        commentData.data.replies &&
+        typeof commentData.data.replies === "object" &&
+        commentData.data.replies.data?.children
+      ) {
+        replies = this.processCommentTree(commentData.data.replies.data.children);
+      }
+
+      return {
+        comment,
+        replies,
+      };
+    } catch (error) {
+      throw new RedditError(
+        `Failed to fetch comment thread: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "API_ERROR",
+        error,
+      );
+    }
+  }
+
+  public async searchReddit(options: {
+    query: string;
+    subreddit?: string;
+    sort?: "relevance" | "hot" | "new" | "top";
+    time?: "hour" | "day" | "week" | "month" | "year" | "all";
+    limit?: number;
+  }): Promise<RedditPost[]> {
+    const { query, subreddit, sort = "relevance", time = "all", limit = 25 } = options;
+    const formattedSubreddit = this.formatSubreddit(subreddit);
+
+    let endpoint = formattedSubreddit ? `/r/${formattedSubreddit}/search.json` : "/search.json";
+
+    const params = new URLSearchParams({
+      q: query,
+      sort,
+      t: time,
+      limit: limit.toString(),
+      restrict_sr: formattedSubreddit ? "true" : "false",
+    });
+
+    endpoint += `?${params.toString()}`;
+
+    const data = await this.redditFetch<RedditApiResponse<RedditPost>>(endpoint);
+    return data.data.children?.map((child) => transformPost(child.data)) ?? [];
+  }
+
+  /**
+   * Sends a reply to a post or comment
+   * @param parentId - The ID of the parent post or comment to reply to
+   * @param text - The content of the reply
+   * @returns Promise<any> - The API response
+   */
+  public async sendReply(parentId: string, text: string): Promise<any> {
+    try {
+      const formData = new URLSearchParams({
+        parent: parentId,
+        text: text,
+      });
+
+      const response = await this.redditFetch("/api/comment", {
+        method: "POST",
+        body: formData,
+      });
+
+      return response;
+    } catch (error) {
+      throw new RedditError(
+        `Failed to send reply: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "API_ERROR",
+        error,
+      );
+    }
   }
 }

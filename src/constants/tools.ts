@@ -1,14 +1,15 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { analyseSubreddit } from "@/constants/tool/analyse-subreddit.js";
 import { configureInstructions } from "@/constants/tool/configure-instructions.js";
-import { configureReddit } from "@/constants/tool/configure-reddit.js";
 import { createRedditPost } from "@/constants/tool/create-post.js";
 import { createRedditReply } from "@/constants/tool/create-reply.js";
-import { deleteRedditPost } from "@/constants/tool/delete-draft.js";
 import { fetchPost } from "@/constants/tool/fetch-post.js";
-import { getRedditNotifications } from "@/constants/tool/get-notifiations.js";
-import { getRedditPosts } from "@/constants/tool/get-posts.js";
+import { getRedditNotifications } from "@/constants/tool/get-notifications.js";
+import { getPosts } from "@/constants/tool/get-posts.js";
 import { sendRedditPost } from "@/constants/tool/send-post.js";
+import { searchReddit } from "@/constants/tool/search-reddit.js";
+import { sendReply } from "@/constants/tool/send-reply.js";
+import { getComment } from "@/constants/tool/get-comment.js";
 import { RedditConfigData } from "@/types/config.js";
 
 export const TOOL_ERROR_MESSAGES = {
@@ -21,61 +22,22 @@ export const TOOL_RESPONSE_MESSAGES = {
 } as const;
 
 export const TOOLS: Tool[] = [
-  configureReddit,
-  getRedditPosts,
+  getPosts,
   fetchPost,
   getRedditNotifications,
   analyseSubreddit,
   createRedditPost,
   createRedditReply,
   sendRedditPost,
-  deleteRedditPost,
   configureInstructions,
+  searchReddit,
+  sendReply,
+  getComment,
 ];
 
 export function populateToolsInitialData(tools: Tool[], configData: RedditConfigData): Tool[] {
   return tools.map((tool) => {
     const clonedTool = { ...tool };
-
-    // if (
-    //   tool.name === "create_reddit_post" &&
-    //   configData.subreddits &&
-    //   configData.subreddits.length > 0
-    // ) {
-    //   clonedTool._meta = {
-    //     ...(clonedTool._meta || {}),
-    //     initialData: {
-    //       subreddit: configData.subreddits[0] || "",
-    //     },
-    //   };
-    // }
-
-    // if (
-    //   tool.name === "create_reddit_reply" &&
-    //   configData.subreddits &&
-    //   configData.subreddits.length > 0
-    // ) {
-    //   clonedTool._meta = {
-    //     ...(clonedTool._meta || {}),
-    //     initialData: {
-    //       subreddit: configData.subreddits,
-    //     },
-    //   };
-    // }
-
-    // if (
-    //   tool.name === "analyse_subreddit" &&
-    //   configData.subreddits &&
-    //   configData.subreddits.length > 0
-    // ) {
-    //   clonedTool._meta = {
-    //     ...(clonedTool._meta || {}),
-    //     initialData: {
-    //       subreddit: configData.subreddits,
-    //     },
-    //   };
-    // }
-
     return clonedTool;
   });
 }

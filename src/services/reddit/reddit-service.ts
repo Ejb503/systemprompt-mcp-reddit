@@ -10,6 +10,8 @@ import {
   FetchNotificationsOptions,
   FetchSubscribedSubredditsOptions,
   SubscribedSubreddit,
+  RedditComment,
+  RedditCommentThread,
 } from "@/types/reddit.js";
 import type {
   RedditConfigData,
@@ -240,6 +242,52 @@ export class RedditService {
         "API_ERROR",
       );
     }
+  }
+
+  /**
+   * Search Reddit posts
+   */
+  public async searchReddit(options: {
+    query: string;
+    subreddit?: string;
+    sort?: "relevance" | "hot" | "new" | "top";
+    time?: "hour" | "day" | "week" | "month" | "year" | "all";
+    limit?: number;
+  }): Promise<RedditPost[]> {
+    this.checkInitialized();
+    return this.postService.searchReddit(options);
+  }
+
+  /**
+   * Fetches a single comment by its ID
+   * @param commentId The ID of the comment to fetch
+   * @returns The fetched comment
+   */
+  public async fetchCommentById(commentId: string): Promise<RedditComment> {
+    this.checkInitialized();
+    return this.postService.fetchCommentById(commentId);
+  }
+
+  /**
+   * Fetches a comment thread (comment with all its replies)
+   * @param postId The ID of the post containing the comment
+   * @param commentId The ID of the comment to fetch
+   * @returns The comment thread with all replies
+   */
+  public async fetchCommentThread(postId: string, commentId: string): Promise<RedditCommentThread> {
+    this.checkInitialized();
+    return this.postService.fetchCommentThread(postId, commentId);
+  }
+
+  /**
+   * Sends a reply to a post or comment
+   * @param parentId The ID of the parent post or comment
+   * @param text The content of the reply
+   * @returns The API response
+   */
+  public async sendReply(parentId: string, text: string): Promise<any> {
+    this.checkInitialized();
+    return this.postService.sendReply(parentId, text);
   }
 
   private checkInitialized() {

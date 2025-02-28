@@ -26,6 +26,11 @@ export const getRedditNotifications: Tool = {
     required: [],
   },
   _meta: {
-    hidden: false,
+    hidden: true,
+    displayTitle: "Get Notifications",
+    type: "server",
   },
 };
+
+export const getRedditNotificationsSuccessMessage =
+  "The user has successfully fetched their notifications from Reddit. Read and understand the results, present a summary of the results to the user.";

@@ -14,6 +14,11 @@ export const analyseSubreddit: Tool = {
     required: ["subreddit"],
   },
   _meta: {
-    hidden: false,
+    hidden: true,
+    displayTitle: "Analyse Subreddit",
+    type: "sampling",
   },
 };
+
+export const analyseSubredditSuccessMessage =
+  "The user has submitted a request to analyse a subreddit. The results should arrive in a few seconds. Read and understand the results, present a summary of the results to the user and ask if they would like to analyse another subreddit.";

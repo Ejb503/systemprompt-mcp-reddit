@@ -1,9 +1,28 @@
-import { ToolHandler, AnalyseSubredditArgs } from "./types.js";
+import { ToolHandler, AnalyseSubredditArgs, formatToolResponse } from "./types.js";
+import { RedditError } from "@/types/reddit.js";
 import { sendSamplingRequest } from "@/handlers/sampling.js";
 import { handleGetPrompt } from "@/handlers/prompt-handlers.js";
 import { injectVariables } from "@/utils/message-handlers.js";
 import { TOOL_ERROR_MESSAGES } from "@/constants/tools.js";
 import { ANALYSE_SUBREDDIT_PROMPT } from "@/constants/sampling/analyse-subreddit.js";
+import { JSONSchema7 } from "json-schema";
+
+const responseSchema: JSONSchema7 = {
+  type: "object",
+  properties: {
+    status: { type: "string", enum: ["success", "error"] },
+    message: { type: "string" },
+    result: {
+      type: "object",
+      properties: {
+        status: { type: "string", enum: ["pending"] },
+        subreddit: { type: "string" },
+      },
+      required: ["status", "subreddit"],
+    },
+  },
+  required: ["status", "message", "result"],
+};
 
 export const handleAnalyseSubreddit: ToolHandler<AnalyseSubredditArgs> = async (
   args,
@@ -43,8 +62,8 @@ export const handleAnalyseSubreddit: ToolHandler<AnalyseSubredditArgs> = async (
       },
     });
 
-    const responseSchema = prompt._meta?.responseSchema;
-    if (!responseSchema) {
+    const promptResponseSchema = prompt._meta?.responseSchema;
+    if (!promptResponseSchema) {
       throw new Error(`${TOOL_ERROR_MESSAGES.TOOL_CALL_FAILED} No response schema found`);
     }
 
@@ -61,29 +80,33 @@ export const handleAnalyseSubreddit: ToolHandler<AnalyseSubredditArgs> = async (
         temperature: 0.7,
         _meta: {
           callback: "analyse_subreddit_callback",
-          responseSchema: responseSchema,
+          responseSchema: promptResponseSchema,
         },
         arguments: stringArgs,
       },
     });
 
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Reddit subreddit analysis started for r/${args.subreddit}, please wait...`,
-        },
-      ],
-    };
+    return formatToolResponse({
+      message: `Reddit subreddit analysis started for r/${args.subreddit}, please wait...`,
+      result: {
+        status: "pending",
+        subreddit: args.subreddit,
+      },
+      schema: responseSchema,
+      type: "sampling",
+      title: "Subreddit Analysis",
+    });
   } catch (error) {
     console.error("Failed to analyze subreddit:", error);
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Failed to analyze subreddit: ${error instanceof Error ? error.message : "Unknown error"}`,
-        },
-      ],
-    };
+    return formatToolResponse({
+      status: "error",
+      message: `Failed to analyze subreddit: ${error instanceof Error ? error.message : "Unknown error"}`,
+      error: {
+        type: error instanceof RedditError ? error.type : "API_ERROR",
+        details: error,
+      },
+      type: "sampling",
+      title: "Error Analyzing Subreddit",
+    });
   }
 };

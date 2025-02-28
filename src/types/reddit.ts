@@ -161,6 +161,11 @@ export interface FetchNotificationsOptions {
   filter?: "all" | "unread" | "messages" | "comments" | "mentions";
   limit?: number;
   markRead?: boolean;
+  excludeIds?: string[];
+  excludeTypes?: Array<"comment_reply" | "post_reply" | "username_mention" | "message" | "other">;
+  excludeSubreddits?: string[];
+  after?: string;
+  before?: string;
 }
 
 export interface FetchSubscribedSubredditsOptions {

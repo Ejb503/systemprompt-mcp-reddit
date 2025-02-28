@@ -14,6 +14,11 @@ export const fetchPost: Tool = {
     required: ["postId"],
   },
   _meta: {
-    hidden: false,
+    hidden: true,
+    displayTitle: "Fetch Post",
+    type: "server",
   },
 };
+
+export const fetchPostSuccessMessage =
+  "The user has fetched a post from Reddit. Read and understand the results, present a summary of the results to the user and ask if they would like to fetch another post.";
