@@ -35,13 +35,6 @@ export const ANALYSE_SUBREDDIT_PROMPT: SamplingPrompt = {
       },
     },
     {
-      role: "assistant",
-      content: {
-        type: "text",
-        text: "I understand the subreddit rules and guidelines:\n{{redditConfig}}",
-      },
-    },
-    {
       role: "user",
       content: {
         type: "text",
