@@ -38,7 +38,7 @@ export const CREATE_REDDIT_POST_PROMPT: SamplingPrompt = {
       role: "assistant",
       content: {
         type: "text",
-        text: "I understand the subreddit rules and posting guidelines:\n{{redditConfig}}",
+        text: "I understand the subreddit rules and posting guidelines:\n{{subredditRules}}",
       },
     },
     {

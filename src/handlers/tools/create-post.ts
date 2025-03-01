@@ -27,23 +27,23 @@ const responseSchema: JSONSchema7 = {
 
 export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
   args,
-  { systemPromptService },
+  { systemPromptService, redditService },
 ) => {
   try {
     const configBlocks = await systemPromptService.listBlocks();
-    const redditConfigBlock = configBlocks.find((block) => block.prefix === "reddit_config");
     const instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
 
-    if (!redditConfigBlock || !instructionsBlock) {
+    if (!instructionsBlock) {
       throw new RedditError("Reddit configuration or instructions not found", "VALIDATION_ERROR");
     }
+    const subredditInfo = await redditService.getSubredditInfo(args.subreddit);
 
     // Convert all values to strings and include configs
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
       type: "post", // Explicitly set the type for the prompt
       kind: "self", // Always force text posts
-      redditConfig: redditConfigBlock.content,
+      subredditRules: JSON.stringify(subredditInfo),
       redditInstructions: instructionsBlock.content,
     };
 

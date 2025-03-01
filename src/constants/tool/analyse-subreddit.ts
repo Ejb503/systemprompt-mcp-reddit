@@ -17,6 +17,7 @@ export const analyseSubreddit: Tool = {
     hidden: true,
     displayTitle: "Analyse Subreddit",
     type: "sampling",
+    callback: "analyse_subreddit_callback",
   },
 };
 

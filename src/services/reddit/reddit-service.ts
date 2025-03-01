@@ -81,8 +81,8 @@ export class RedditService {
 
     return {
       ...requiredEnvVars,
-      appName: "RedditBot",
-      appVersion: "1.0.0",
+      appName: "Systemprompt MCP Reddit",
+      appVersion: "1.0.9",
       username: "AutomatedBot",
     };
   }
