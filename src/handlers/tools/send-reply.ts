@@ -39,13 +39,13 @@ export const handleSendReply: ToolHandler<SendReplyArgs> = async (args, { reddit
       );
     }
 
-    const replyParams: RedditReplyParams = {
-      parent_id: parentId,
+    const params: RedditReplyParams = {
+      parentId: parentId,
       text: content,
       sendreplies: true,
     };
 
-    const response = await redditService.sendReply(replyParams);
+    const response = await redditService.sendReply(params);
 
     return formatToolResponse({
       message: sendReplySuccessMessage,

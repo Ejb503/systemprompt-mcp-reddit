@@ -152,7 +152,7 @@ export interface RedditReplyParams {
    * t1_ prefix for replying to comments
    * t3_ prefix for replying to posts
    */
-  parent_id: string;
+  parentId: string;
   /** The markdown text of the comment (10000 char max) */
   text: string;
   /** Whether to send reply notifications */
@@ -167,7 +167,7 @@ export interface RedditReplyResponse {
   /** Comment ID with t1_ prefix */
   id: string;
   /** Parent ID that was replied to */
-  parent_id: string;
+  parentId: string;
   /** The created comment's text */
   body: string;
   /** Full permalink to the comment */
@@ -202,7 +202,9 @@ export interface SubredditRequirements {
 }
 
 export interface RedditNotification {
+  /** Full ID with prefix (t1_, t3_, t4_) */
   id: string;
+  /** Full name with prefix */
   name: string;
   type: "comment_reply" | "post_reply" | "username_mention" | "message" | "other";
   subject: string;
@@ -211,8 +213,12 @@ export interface RedditNotification {
   author: string;
   subreddit?: string;
   context?: string;
-  postId?: string;
-  commentId?: string;
+  /**
+   * ID of parent thing being replied to, with prefix
+   * t1_ prefix for comments
+   * t3_ prefix for posts
+   */
+  parentId?: string;
   createdUtc: number;
   isNew: boolean;
   permalink?: string;

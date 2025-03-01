@@ -315,23 +315,23 @@ export class RedditService {
   public async sendReply(params: RedditReplyParams): Promise<RedditReplyResponse> {
     this.checkInitialized();
 
-    // Validate parent_id format
-    if (!params.parent_id.match(/^t[1|3]_[a-z0-9]+$/i)) {
+    // Validate parent ID format
+    if (!params.parentId.match(/^t[1|3]_[a-z0-9]+$/i)) {
       throw new RedditError(
-        "Invalid parent_id format. Must start with t1_ for comments or t3_ for posts",
+        "Invalid parent ID format. Must start with t1_ or t3_",
         "VALIDATION_ERROR",
       );
     }
 
-    // Validate text length (Reddit's limit is 10000 characters)
-    if (!params.text || params.text.length === 0 || params.text.length > 10000) {
+    // Validate text length
+    if (params.text.length > 10000) {
       throw new RedditError(
-        "Reply text must be between 1 and 10000 characters",
+        "Reply text exceeds maximum length of 10000 characters",
         "VALIDATION_ERROR",
       );
     }
 
-    return this.postService.sendReply(params.parent_id, params.text);
+    return this.postService.sendReply(params.parentId, params.text);
   }
 
   private checkInitialized() {

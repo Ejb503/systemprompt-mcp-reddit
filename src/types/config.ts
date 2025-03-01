@@ -15,7 +15,7 @@ export interface RedditNotification {
    * The type of notification
    * Common values: "comment_reply", "post_reply", "username_mention"
    */
-  type: string;
+  type: "comment_reply" | "post_reply" | "username_mention" | "message" | "other";
   /** Unix timestamp of when the notification was created */
   created_utc: number;
   /** The subreddit where the notification originated */
@@ -32,7 +32,7 @@ export interface RedditNotification {
    * t3_ = Post/Link (for post replies)
    * Format: {type_prefix}_{base36_id}
    */
-  content_id: string;
+  parent_id: string;
   /**
    * Reddit URL path to the content
    * Format for comments: /r/{subreddit}/comments/{post_id}/{comment_id}
@@ -358,7 +358,7 @@ export const mockRedditConfig: RedditConfigData = {
       subreddit: "programming",
       body: "Thanks for your helpful comment!",
       author: "user123",
-      content_id: "t1_abc123", // Comment ID
+      parent_id: "t1_abc123", // Comment ID
       permalink: "/r/programming/comments/xyz789/t1_abc123",
       unread: true,
     },
@@ -370,7 +370,7 @@ export const mockRedditConfig: RedditConfigData = {
       title: "Question about interfaces",
       body: "This solved my problem, thank you!",
       author: "typescript_fan",
-      content_id: "t3_def456", // Post ID
+      parent_id: "t3_def456", // Post ID
       permalink: "/r/typescript/comments/def456",
       unread: false,
     },

@@ -164,7 +164,7 @@ export const transformNotification = (data: Record<string, unknown>): ApiRedditN
   // Determine notification type
   let type: ApiRedditNotification["type"] = "other";
   if (data.was_comment) {
-    if (data.parent_id && typeof data.parent_id === "string" && data.parent_id.startsWith("t3_")) {
+    if (data.parentId && typeof data.parentId === "string" && data.parentId.startsWith("t3_")) {
       type = "post_reply";
     } else {
       type = "comment_reply";
@@ -175,23 +175,8 @@ export const transformNotification = (data: Record<string, unknown>): ApiRedditN
     type = "message";
   }
 
-  // Extract post and comment IDs from context if available
-  let postId: string | undefined;
-  let commentId: string | undefined;
-
-  if (typeof data.context === "string") {
-    const contextParts = data.context.split("/");
-    // Format is typically /r/subreddit/comments/postid/title/commentid/
-    if (contextParts.length >= 5) {
-      postId = contextParts[4];
-      if (contextParts.length >= 7) {
-        commentId = contextParts[6];
-      }
-    }
-  }
-
   return {
-    id: String(data.id || ""),
+    id: String(data.name || ""), // name contains the full ID with prefix
     name: String(data.name || ""),
     type,
     subject: String(data.subject || ""),
@@ -201,29 +186,27 @@ export const transformNotification = (data: Record<string, unknown>): ApiRedditN
     author: String(data.author || "[deleted]"),
     subreddit: typeof data.subreddit === "string" ? data.subreddit : undefined,
     context: typeof data.context === "string" ? data.context : undefined,
-    postId,
-    commentId,
+    parentId: typeof data.parentId === "string" ? data.parentId : undefined,
     isNew: Boolean(data.new),
     permalink: typeof data.context === "string" ? data.context : undefined,
   };
 };
 
-export const transformToConfigNotification = (
+export function transformToConfigNotification(
   notification: ApiRedditNotification,
-): ConfigRedditNotification => {
+): ConfigRedditNotification {
   return {
     id: notification.id,
     type: notification.type,
-    created_utc: notification.createdUtc,
+    parent_id: notification.parentId || "", // Use parentId consistently
     subreddit: notification.subreddit || "",
-    title: notification.subject,
-    body: notification.body,
     author: notification.author,
-    content_id: notification.postId || notification.commentId || "",
+    body: notification.body || "",
+    created_utc: notification.createdUtc,
     permalink: notification.permalink || "",
     unread: notification.isNew,
   };
-};
+}
 
 const extractAllowedPostTypes = (data: any): string[] => {
   const types: string[] = [];
