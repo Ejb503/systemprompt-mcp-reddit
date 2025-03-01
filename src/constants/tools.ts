@@ -1,8 +1,8 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { analyseSubreddit } from "@/constants/tool/analyse-subreddit.js";
 import { configureInstructions } from "@/constants/tool/configure-instructions.js";
-import { createRedditPost } from "@/constants/tool/create-post.js";
-import { createRedditReply } from "@/constants/tool/create-reply.js";
+import { createPost } from "@/constants/tool/create-post.js";
+import { createReply } from "@/constants/tool/create-reply.js";
 import { fetchPost } from "@/constants/tool/fetch-post.js";
 import { getRedditNotifications } from "@/constants/tool/get-notifications.js";
 import { getPosts } from "@/constants/tool/get-posts.js";
@@ -26,8 +26,8 @@ export const TOOLS: Tool[] = [
   fetchPost,
   getRedditNotifications,
   analyseSubreddit,
-  createRedditPost,
-  createRedditReply,
+  createPost,
+  createReply,
   sendRedditPost,
   configureInstructions,
   searchReddit,

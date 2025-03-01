@@ -75,7 +75,6 @@ export const handleSearchReddit: ToolHandler<SearchRedditArgs> = async (
       title: "Reddit Search Results",
     });
   } catch (error) {
-    console.error("Failed to search Reddit:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to search Reddit: ${error instanceof Error ? error.message : "Unknown error"}`,

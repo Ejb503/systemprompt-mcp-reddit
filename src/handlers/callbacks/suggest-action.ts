@@ -90,7 +90,6 @@ export async function handleSuggestActionCallback(result: CreateMessageResult): 
       }),
     );
   } catch (error) {
-    console.error("Failed to handle suggest action callback:", error);
     throw error;
   }
 }

@@ -17,7 +17,6 @@ export async function handleListPrompts(request: ListPromptsRequest): Promise<Li
       prompts: PROMPTS.map(({ messages, ...rest }) => rest),
     };
   } catch (error: any) {
-    console.error("Failed to fetch prompts:", error);
     throw error;
   }
 }
@@ -62,7 +61,6 @@ export async function handleGetPrompt(request: GetPromptRequest): Promise<GetPro
       _meta: foundPrompt._meta,
     };
   } catch (error: any) {
-    console.error("Failed to fetch prompt:", error);
     throw error;
   }
 }

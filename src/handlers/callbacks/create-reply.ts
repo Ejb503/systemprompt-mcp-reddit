@@ -44,9 +44,7 @@ function isTextContent(content: unknown): content is { type: "text"; text: strin
   );
 }
 
-export async function handleCreateRedditReplyCallback(
-  result: CreateMessageResult,
-): Promise<string> {
+export async function handleCreateRedditReplyCallback(result: CreateMessageResult): Promise<void> {
   const systemPromptService = SystemPromptService.getInstance();
 
   try {
@@ -62,7 +60,6 @@ export async function handleCreateRedditReplyCallback(
       );
     }
 
-    // Create a block to store the reply
     const replyBlock: SystempromptBlockRequest = {
       content: JSON.stringify(replyData),
       type: "block",
@@ -74,25 +71,20 @@ export async function handleCreateRedditReplyCallback(
       },
     };
 
-    // Create new block
     const savedBlock = await systemPromptService.createBlock(replyBlock);
+    const message = `Reddit reply created for message ${replyData.messageId} in r/${replyData.subreddit}. Please read it to the user`;
 
-    const notificationResponse = await sendSamplingCompleteNotification(
-      `Reddit reply created for message ${replyData.messageId} in r/${replyData.subreddit}. Please read it to the user`,
-    );
+    const notificationResponse = formatToolResponse({
+      message: message,
+      result: savedBlock,
+      schema: blockSchema,
+      type: "sampling",
+      title: "Create Reddit Reply Callback",
+    });
+
+    await sendSamplingCompleteNotification(JSON.stringify(notificationResponse));
     await updateBlocks();
-
-    return JSON.stringify(
-      formatToolResponse({
-        message: `Reddit reply created for message ${replyData.messageId} in r/${replyData.subreddit}`,
-        result: savedBlock,
-        schema: blockSchema,
-        type: "sampling",
-        title: "Create Reddit Reply Callback",
-      }),
-    );
   } catch (error) {
-    console.error("Failed to handle Reddit reply callback:", error);
     throw error;
   }
 }

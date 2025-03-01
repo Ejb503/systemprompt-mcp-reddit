@@ -1,7 +1,7 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export const createRedditPost: Tool = {
-  name: "create_reddit_post",
+export const createPost: Tool = {
+  name: "create_post",
   description:
     "Creates a new text post for Reddit. This will not post to Reddit, it will create a draft that can be edited and sent manually below.",
   inputSchema: {
@@ -22,6 +22,7 @@ export const createRedditPost: Tool = {
     hidden: false,
     displayTitle: "Create Post",
     type: "api",
+    callback: "create_post_callback",
   },
 };
 

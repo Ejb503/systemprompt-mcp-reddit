@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export const createRedditReply: Tool = {
+export const createReply: Tool = {
   name: "create_reply",
   description:
     "Creates a reply to a Reddit post or comment. This will not post to Reddit. it will create a draft that can be edited and sent manually below",
@@ -26,7 +26,7 @@ export const createRedditReply: Tool = {
     hidden: true,
     displayTitle: "Create Reply",
     type: "api",
-    callback: "create_reddit_reply",
+    callback: "create_reply_callback",
   },
 };
 

@@ -57,7 +57,6 @@ export const handleSendReply: ToolHandler<SendReplyArgs> = async (args, { reddit
       title: "Send Reddit Reply",
     });
   } catch (error) {
-    console.error("Failed to send reply:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to send reply: ${error instanceof Error ? error.message : "Unknown error"}`,

@@ -68,7 +68,6 @@ export const handleConfigureInstructions: ToolHandler<ConfigureInstructionsArgs>
       title: "Configure Instructions",
     });
   } catch (error) {
-    console.error("Failed to save Reddit instructions:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to save Reddit instructions: ${error instanceof Error ? error.message : "Unknown error"}`,

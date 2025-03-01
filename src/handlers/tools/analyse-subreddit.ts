@@ -97,7 +97,6 @@ export const handleAnalyseSubreddit: ToolHandler<AnalyseSubredditArgs> = async (
       title: "Subreddit Analysis",
     });
   } catch (error) {
-    console.error("Failed to analyze subreddit:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to analyze subreddit: ${error instanceof Error ? error.message : "Unknown error"}`,

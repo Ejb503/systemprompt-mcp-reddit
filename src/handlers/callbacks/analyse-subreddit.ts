@@ -49,7 +49,7 @@ function isTextContent(content: unknown): content is { type: "text"; text: strin
   );
 }
 
-export async function handleAnalyseSubredditCallback(result: CreateMessageResult): Promise<string> {
+export async function handleAnalyseSubredditCallback(result: CreateMessageResult): Promise<void> {
   const systemPromptService = SystemPromptService.getInstance();
 
   try {
@@ -83,23 +83,18 @@ export async function handleAnalyseSubredditCallback(result: CreateMessageResult
 
     // Create new block
     const savedBlock = await systemPromptService.createBlock(analysisBlock);
+    const message = `Reddit analysis created for r/${analysisData.subreddit}. Please read it to the user`;
 
-    const notificationResponse = await sendSamplingCompleteNotification(
-      `Reddit analysis created for r/${analysisData.subreddit} - ${JSON.stringify(analysisData)}. Please read it to the user`,
-    );
+    const notificationResponse = formatToolResponse({
+      message: message,
+      result: savedBlock,
+      schema: blockSchema,
+      type: "sampling",
+      title: "Analyse Subreddit Callback",
+    });
+    await sendSamplingCompleteNotification(JSON.stringify(notificationResponse));
     await updateBlocks();
-
-    return JSON.stringify(
-      formatToolResponse({
-        message: `Reddit analysis created for r/${analysisData.subreddit}`,
-        result: savedBlock,
-        schema: blockSchema,
-        type: "sampling",
-        title: "Analyse Subreddit Callback",
-      }),
-    );
   } catch (error) {
-    console.error("Failed to handle subreddit analysis callback:", error);
     throw error;
   }
 }

@@ -76,7 +76,6 @@ export const handleGetRedditNotifications: ToolHandler<GetRedditNotificationsArg
       title: "Reddit Notifications",
     });
   } catch (error) {
-    console.error("Failed to fetch Reddit notifications:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to fetch Reddit notifications: ${error instanceof Error ? error.message : "Unknown error"}`,

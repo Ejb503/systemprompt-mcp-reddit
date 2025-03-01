@@ -78,7 +78,6 @@ export const handleGetComment: ToolHandler<GetCommentArgs> = async (args, { redd
       title: "Reddit Comment",
     });
   } catch (error) {
-    console.error("Failed to fetch comment:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to fetch comment: ${error instanceof Error ? error.message : "Unknown error"}`,

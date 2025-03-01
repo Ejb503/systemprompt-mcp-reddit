@@ -45,7 +45,7 @@ function isTextContent(content: unknown): content is { type: "text"; text: strin
   );
 }
 
-export async function handleCreateRedditPostCallback(result: CreateMessageResult): Promise<string> {
+export async function handleCreateRedditPostCallback(result: CreateMessageResult): Promise<void> {
   const systemPromptService = SystemPromptService.getInstance();
 
   try {
@@ -73,23 +73,18 @@ export async function handleCreateRedditPostCallback(result: CreateMessageResult
 
     // Create new block
     const savedBlock = await systemPromptService.createBlock(postBlock);
+    const message = `Reddit post created for r/${postData.subreddit}. Please read it to the user`;
 
-    const notificationResponse = await sendSamplingCompleteNotification(
-      `Reddit post created for r/${postData.subreddit}`,
-    );
+    const notificationResponse = formatToolResponse({
+      message: message,
+      result: savedBlock,
+      schema: blockSchema,
+      type: "sampling",
+      title: "Create Reddit Post Callback",
+    });
+    await sendSamplingCompleteNotification(JSON.stringify(notificationResponse));
     await updateBlocks();
-
-    return JSON.stringify(
-      formatToolResponse({
-        message: `Reddit post created for r/${postData.subreddit}`,
-        result: savedBlock,
-        schema: blockSchema,
-        type: "sampling",
-        title: "Create Reddit Post Callback",
-      }),
-    );
   } catch (error) {
-    console.error("Failed to handle Reddit post callback:", error);
     throw error;
   }
 }

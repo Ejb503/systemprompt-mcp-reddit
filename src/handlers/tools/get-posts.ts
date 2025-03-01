@@ -66,7 +66,6 @@ export const handleGetChannelPosts: ToolHandler<GetChannelPostsArgs> = async (
       title: "Reddit Posts",
     });
   } catch (error) {
-    console.error("Failed to fetch Reddit content:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to fetch Reddit content: ${error instanceof Error ? error.message : "Unknown error"}`,

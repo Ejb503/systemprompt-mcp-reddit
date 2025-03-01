@@ -72,7 +72,7 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
         maxTokens: 100000,
         temperature: 0.7,
         _meta: {
-          callback: "create_reddit_post",
+          callback: "create_post_callback",
           responseSchema: promptResponseSchema,
         },
         arguments: stringArgs,
@@ -90,7 +90,6 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
       title: "Create Reddit Post",
     });
   } catch (error) {
-    console.error("Failed to create Reddit post:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to create Reddit post: ${error instanceof Error ? error.message : "Unknown error"}`,

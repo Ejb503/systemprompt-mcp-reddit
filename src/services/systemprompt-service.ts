@@ -189,7 +189,6 @@ export class SystemPromptService {
 
       return await this.request<SystempromptBlockResponse>("POST", "/block", newBlock);
     } catch (error) {
-      console.error("Error in upsertBlock:", error);
       throw new Error(
         `Failed to upsert block: ${error instanceof Error ? error.message : "Unknown error"}`,
       );

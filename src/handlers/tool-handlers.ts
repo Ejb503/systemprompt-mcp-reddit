@@ -54,7 +54,6 @@ export async function handleListTools(request: ListToolsRequest): Promise<ListTo
     let tools = [...TOOLS];
     return { tools, _meta: { required: ["configure_instructions"] } };
   } catch (error) {
-    console.error("Error populating tool initial data:", error);
     return { tools: TOOLS };
   }
 }
@@ -104,7 +103,6 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
         throw new Error(`${TOOL_ERROR_MESSAGES.UNKNOWN_TOOL} ${request.params.name}`);
     }
   } catch (error) {
-    console.error(TOOL_ERROR_MESSAGES.TOOL_CALL_FAILED, error);
     throw error;
   }
 }

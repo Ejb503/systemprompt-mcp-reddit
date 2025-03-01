@@ -72,7 +72,6 @@ export const handleSendPost: ToolHandler<SendPostArgs> = async (args, { redditSe
       title: "Send Reddit Post",
     });
   } catch (error) {
-    console.error("Failed to send post:", error);
     return formatToolResponse({
       status: "error",
       message: `Failed to send post: ${error instanceof Error ? error.message : "Unknown error"}`,

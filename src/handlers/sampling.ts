@@ -22,7 +22,6 @@ export async function sendSamplingRequest(
     }
     return result;
   } catch (error) {
-    console.error("Sampling request failed:", error instanceof Error ? error.message : error);
     if (error instanceof Error) {
       throw error;
     }
@@ -36,18 +35,22 @@ export async function sendSamplingRequest(
  * @param result The LLM result
  * @returns The tool response
  */
-async function handleCallback(callback: string, result: CreateMessageResult): Promise<string> {
+async function handleCallback(callback: string, result: CreateMessageResult): Promise<void> {
   try {
     await sendOperationNotification(callback, `Callback started: ${callback}`);
     switch (callback) {
-      case "create_reddit_post":
-        return await handleCreateRedditPostCallback(result);
-      case "create_reddit_reply":
-        return await handleCreateRedditReplyCallback(result);
+      case "create_post_callback":
+        await handleCreateRedditPostCallback(result);
+        break;
+      case "create_reply_callback":
+        await handleCreateRedditReplyCallback(result);
+        break;
       case "suggest_action":
-        return await handleSuggestActionCallback(result);
+        await handleSuggestActionCallback(result);
+        break;
       case "analyse_subreddit_callback":
-        return await handleAnalyseSubredditCallback(result);
+        await handleAnalyseSubredditCallback(result);
+        break;
       default:
         throw new Error(`Unknown callback type: ${callback}`);
     }
