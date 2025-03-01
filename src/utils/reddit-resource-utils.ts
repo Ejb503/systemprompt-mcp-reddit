@@ -11,8 +11,8 @@ export const RESOURCE_TYPES = {
 export const ACTIONS = {
   EDIT: "edit_block",
   DELETE: "delete_block",
-  CREATE_POST: "create_reddit_post",
-  CREATE_REPLY: "create_reddit_reply",
+  CREATE_POST: "create_post",
+  CREATE_REPLY: "create_reply",
 } as const;
 
 // Define the expected argument types to match ConfigureRedditArgs

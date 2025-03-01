@@ -65,7 +65,7 @@ Ensure the reply:
     },
   ],
   _meta: {
-    callback: "create_reddit_reply",
+    callback: "create_reply_callback",
     responseSchema: REDDIT_REPLY_RESPONSE_SCHEMA,
   },
 };

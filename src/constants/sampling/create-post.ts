@@ -71,7 +71,7 @@ Ensure the post:
     },
   ],
   _meta: {
-    callback: "create_reddit_post",
+    callback: "create_post_callback",
     responseSchema: REDDIT_POST_RESPONSE_SCHEMA,
   },
 };

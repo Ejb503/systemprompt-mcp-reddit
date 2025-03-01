@@ -12,13 +12,14 @@ import {
   getAvailableActions,
   assertRedditPostArgs,
   assertRedditReplyArgs,
+  ACTIONS,
 } from "../utils/reddit-resource-utils.js";
 
 const PREFIX_SATISFIES_MAP = {
   reddit_config: ["configure_reddit"],
   reddit_instructions: ["configure_instructions"],
-  reddit_post: ["create_reddit_post"],
-  reddit_reply: ["create_reddit_reply"],
+  reddit_post: [ACTIONS.CREATE_POST],
+  reddit_reply: [ACTIONS.CREATE_REPLY],
 };
 
 export async function handleListResources(
