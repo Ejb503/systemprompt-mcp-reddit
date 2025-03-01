@@ -28,20 +28,43 @@ const replyResponseSchema: JSONSchema7 = {
   required: ["status", "message", "result"],
 };
 
+const replyInputSchema: JSONSchema7 = {
+  type: "object",
+  properties: {
+    parentId: {
+      type: "string",
+      description:
+        "The ID of the parent post or comment to reply to (must start with t1_ for comments or t3_ for posts)",
+      pattern: "^t[1|3]_[a-z0-9]+$",
+    },
+    text: {
+      type: "string",
+      description: "The markdown text of the reply (max 10000 characters)",
+      maxLength: 10000,
+    },
+    sendreplies: {
+      type: "boolean",
+      description: "Whether to send reply notifications",
+      default: true,
+    },
+  },
+  required: ["parentId", "text"],
+};
+
 export const handleSendReply: ToolHandler<SendReplyArgs> = async (args, { redditService }) => {
   try {
-    const { parentId, content } = args;
+    const { parentId, text } = args;
 
-    if (!parentId || !content) {
+    if (!parentId || !text) {
       throw new RedditError(
-        "parentId and content are required for sending replies",
+        "parentId and text are required for sending replies",
         "VALIDATION_ERROR",
       );
     }
 
     const params: RedditReplyParams = {
-      parentId: parentId,
-      text: content,
+      parentId,
+      text,
       sendreplies: true,
     };
 

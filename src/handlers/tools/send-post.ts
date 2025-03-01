@@ -1,27 +1,32 @@
-import { ToolHandler, formatToolResponse } from "./types.js";
+import { ToolHandler, SendPostArgs, formatToolResponse } from "./types.js";
 import { RedditError, RedditPostParams } from "@/types/reddit.js";
 import { sendRedditPostSuccessMessage } from "@/constants/tool/send-post.js";
 import { JSONSchema7 } from "json-schema";
 
-interface SendPostArgs {
-  messageId: string;
-  subreddit: string;
-  title: string;
-  content?: string;
-  kind?: "self" | "link";
-  url?: string;
-}
-
 const postResponseSchema: JSONSchema7 = {
   type: "object",
   properties: {
-    id: { type: "string" },
-    url: { type: "string" },
-    title: { type: "string" },
-    subreddit: { type: "string" },
-    permalink: { type: "string" },
+    status: { type: "string", enum: ["success", "error"] },
+    message: { type: "string" },
+    result: {
+      type: "object",
+      properties: {
+        response: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            url: { type: "string" },
+            title: { type: "string" },
+            subreddit: { type: "string" },
+            permalink: { type: "string" },
+          },
+          required: ["id", "url", "title", "subreddit", "permalink"],
+        },
+      },
+      required: ["response"],
+    },
   },
-  required: ["id", "url", "title", "subreddit", "permalink"],
+  required: ["status", "message", "result"],
 };
 
 const responseSchema: JSONSchema7 = {
@@ -41,8 +46,8 @@ const responseSchema: JSONSchema7 = {
 };
 
 export const handleSendPost: ToolHandler<SendPostArgs> = async (args, { redditService }) => {
-  if (!args.messageId) {
-    throw new RedditError("messageId is required for sending posts", "VALIDATION_ERROR");
+  if (!args.parentId) {
+    throw new RedditError("parentId is required for sending posts", "VALIDATION_ERROR");
   }
 
   try {

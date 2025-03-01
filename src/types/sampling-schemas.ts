@@ -39,12 +39,12 @@ export const REDDIT_REPLY_RESPONSE_SCHEMA: JSONSchema7 = {
       type: "string",
       description: "Subreddit context",
     },
-    messageId: {
+    parentId: {
       type: "string",
-      description: "ID of message being replied to",
+      description: "ID of parent post/comment being replied to",
     },
   },
-  required: ["content", "subreddit", "messageId"],
+  required: ["content", "subreddit", "parentId"],
 };
 
 export const REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA: JSONSchema7 = {
@@ -66,9 +66,9 @@ export const REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA: JSONSchema7 = {
       type: "string",
       description: "Suggested content or topic for the action",
     },
-    messageId: {
+    parentId: {
       type: "string",
-      description: "ID of message to reply to (if action is 'reply')",
+      description: "ID of parent post/comment to reply to (if action is 'reply')",
     },
   },
   required: ["action", "reasoning"],

@@ -22,6 +22,8 @@ export interface RedditNotification {
   subreddit: string;
   /** Title of the post (only present for post_reply types) */
   title?: string;
+  /** Subject line of the notification */
+  subject: string;
   /** Content of the reply/message */
   body?: string;
   /** Username of the person who triggered the notification */
@@ -356,6 +358,7 @@ export const mockRedditConfig: RedditConfigData = {
       type: "comment_reply",
       created_utc: 1647532800,
       subreddit: "programming",
+      subject: "Thanks for your helpful comment!",
       body: "Thanks for your helpful comment!",
       author: "user123",
       parent_id: "t1_abc123", // Comment ID
@@ -368,6 +371,7 @@ export const mockRedditConfig: RedditConfigData = {
       created_utc: 1647529200,
       subreddit: "typescript",
       title: "Question about interfaces",
+      subject: "Question about interfaces",
       body: "This solved my problem, thank you!",
       author: "typescript_fan",
       parent_id: "t3_def456", // Post ID

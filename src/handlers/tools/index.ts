@@ -19,7 +19,7 @@ export type {
   AnalyseSubredditArgs,
   CreateRedditPostArgs,
   CreateRedditReplyArgs,
-  SendRedditPostArgs,
+  SendPostArgs,
   SearchRedditArgs,
   ConfigureInstructionsArgs,
   SendReplyArgs,

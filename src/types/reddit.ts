@@ -272,3 +272,57 @@ export class RedditError extends Error {
     this.name = "RedditError";
   }
 }
+
+export interface FlairResponse {
+  choices: Array<{
+    flair_template_id: string;
+    text: string;
+    text_editable: boolean;
+    type: string;
+    background_color: string;
+    text_color: string;
+    mod_only: boolean;
+  }>;
+}
+
+export interface SubredditFlair {
+  id: string;
+  text: string;
+  type: "text" | "richtext" | "image";
+  textEditable?: boolean;
+  backgroundColor?: string;
+  textColor?: string;
+  modOnly?: boolean;
+}
+
+export interface RedditService {
+  // Authentication
+  initialize(): Promise<void>;
+  refreshAccessToken(): Promise<void>;
+
+  // Posts and Comments
+  createPost(params: RedditPostParams): Promise<RedditPostResponse>;
+  sendReply(params: RedditReplyParams): Promise<RedditReplyResponse>;
+  getPost(postId: string): Promise<RedditPost>;
+  getComment(commentId: string): Promise<RedditComment>;
+
+  // Subreddit Information
+  getSubredditInfo(subreddit: string): Promise<RedditSubreddit>;
+  getSubredditRules(subreddit: string): Promise<SubredditRulesResponse>;
+  getSubredditRequirements(subreddit: string): Promise<SubredditRequirements>;
+  /**
+   * Fetches available post flairs for a subreddit
+   * @param subreddit The subreddit name (without r/ prefix)
+   * @returns Array of available flairs
+   */
+  getSubredditFlairs(subreddit: string): Promise<SubredditFlair[]>;
+
+  // Notifications
+  fetchNotifications(options?: FetchNotificationsOptions): Promise<RedditNotification[]>;
+  deleteNotification(notificationId: string): Promise<void>;
+
+  // Subscriptions
+  fetchSubscribedSubreddits(
+    options?: FetchSubscribedSubredditsOptions,
+  ): Promise<SubscribedSubreddit[]>;
+}

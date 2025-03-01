@@ -7,6 +7,7 @@ import {
   FetchSubscribedSubredditsOptions,
   SubscribedSubreddit,
   RedditError,
+  FlairResponse,
 } from "@/types/reddit.js";
 import { RedditFetchService } from "./reddit-fetch-service.js";
 import {
@@ -72,5 +73,15 @@ export class RedditSubredditService extends RedditFetchService {
         error,
       );
     }
+  }
+
+  /**
+   * Fetches available post flairs for a subreddit
+   * @param subreddit The subreddit name (without r/ prefix)
+   * @returns Array of available flairs
+   */
+  async getFlairs(subreddit: string): Promise<FlairResponse> {
+    const response = await this.redditFetch<FlairResponse>(`/r/${subreddit}/api/link_flair_v2`);
+    return response;
   }
 }

@@ -18,8 +18,95 @@ const responseSchema: JSONSchema7 = {
       properties: {
         status: { type: "string", enum: ["pending"] },
         subreddit: { type: "string" },
+        post: {
+          type: "object",
+          properties: {
+            subreddit: {
+              type: "string",
+              description: "Subreddit to post to (without r/ prefix)",
+            },
+            title: {
+              type: "string",
+              description: "Post title (1-300 characters)",
+              minLength: 1,
+              maxLength: 300,
+            },
+            kind: {
+              type: "string",
+              enum: ["self", "link"],
+              description: "Type of post - 'self' for text posts, 'link' for URL posts",
+            },
+            content: {
+              type: "string",
+              description: "Text content for self posts",
+            },
+            url: {
+              type: "string",
+              description: "URL for link posts",
+              pattern: "^https?://",
+            },
+            flair: {
+              type: "object",
+              description: "Flair information for the post",
+              properties: {
+                id: {
+                  type: "string",
+                  description: "ID of the selected flair",
+                },
+                text: {
+                  type: "string",
+                  description: "Text of the selected flair",
+                },
+              },
+              required: ["id", "text"],
+            },
+            sendreplies: {
+              type: "boolean",
+              description: "Whether to send replies to inbox",
+              default: true,
+            },
+            nsfw: {
+              type: "boolean",
+              description: "Whether to mark as NSFW",
+              default: false,
+            },
+            spoiler: {
+              type: "boolean",
+              description: "Whether to mark as spoiler",
+              default: false,
+            },
+          },
+          required: ["subreddit", "title", "kind"],
+          allOf: [
+            {
+              if: { properties: { kind: { const: "self" } } },
+              then: { required: ["content"] },
+            },
+            {
+              if: { properties: { kind: { const: "link" } } },
+              then: { required: ["url"] },
+            },
+          ],
+        },
+        availableFlairs: {
+          type: "array",
+          description: "List of available flairs for the subreddit",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              text: { type: "string" },
+              type: { type: "string", enum: ["text", "richtext", "image"] },
+              textEditable: { type: "boolean" },
+              backgroundColor: { type: "string" },
+              textColor: { type: "string" },
+              modOnly: { type: "boolean" },
+            },
+            required: ["id", "text", "type"],
+          },
+        },
       },
-      required: ["status", "subreddit"],
+      required: ["status", "subreddit", "post", "availableFlairs"],
     },
   },
   required: ["status", "message", "result"],
@@ -36,15 +123,27 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
     if (!instructionsBlock) {
       throw new RedditError("Reddit configuration or instructions not found", "VALIDATION_ERROR");
     }
+
+    // Fetch subreddit info including flairs
     const subredditInfo = await redditService.getSubredditInfo(args.subreddit);
+    const flairs = await redditService.getSubredditFlairs(args.subreddit);
 
     // Convert all values to strings and include configs
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
-      type: "post", // Explicitly set the type for the prompt
-      kind: "self", // Always force text posts
+      type: "post",
+      postType: args.postType || "self",
+      flairRequired: String(subredditInfo.flairRequired || false),
+      availableFlairs: JSON.stringify(flairs),
       subredditRules: JSON.stringify(subredditInfo),
       redditInstructions: instructionsBlock.content,
+      redditConfig: JSON.stringify({
+        allowedPostTypes: subredditInfo.allowedPostTypes,
+        rules: subredditInfo.rules,
+        titleRequirements: subredditInfo.titleRequirements,
+        bodyRequirements: subredditInfo.bodyRequirements,
+        flairRequired: subredditInfo.flairRequired,
+      }),
     };
 
     const prompt = await handleGetPrompt({
@@ -84,6 +183,16 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
       result: {
         status: "pending",
         subreddit: args.subreddit,
+        post: {
+          subreddit: args.subreddit,
+          kind: args.postType || "self",
+          title: "", // Will be filled by sampling service
+          content: "", // Will be filled by sampling service
+          sendreplies: true,
+          nsfw: false,
+          spoiler: false,
+        },
+        availableFlairs: flairs,
       },
       schema: responseSchema,
       type: "sampling",

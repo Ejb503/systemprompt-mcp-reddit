@@ -5,15 +5,23 @@ export const sendReply: Tool = {
   description: "Sends a reply to a Reddit post or comment",
   inputSchema: {
     type: "object",
-    required: ["parentId", "content"],
+    required: ["parentId", "text"],
     properties: {
       parentId: {
         type: "string",
-        description: "The ID of the parent post or comment to reply to",
+        description:
+          "The ID of the parent post or comment to reply to (must start with t1_ for comments or t3_ for posts)",
+        pattern: "^t[1|3]_[a-z0-9]+$",
       },
-      content: {
+      text: {
         type: "string",
-        description: "The content of the reply",
+        description: "The markdown text of the reply (max 10000 characters)",
+        maxLength: 10000,
+      },
+      sendreplies: {
+        type: "boolean",
+        description: "Whether to send reply notifications",
+        default: true,
       },
     },
   },

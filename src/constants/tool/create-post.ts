@@ -3,7 +3,7 @@ import { Tool } from "@modelcontextprotocol/sdk/types.js";
 export const createPost: Tool = {
   name: "create_post",
   description:
-    "Creates a new text post for Reddit. This will not post to Reddit, it will create a draft that can be edited and sent manually below.",
+    "Creates a new post for Reddit. This will not post to Reddit, it will create a draft that can be edited and sent manually below. The response must include a title, content type (self/link), and appropriate content.",
   inputSchema: {
     type: "object",
     properties: {
@@ -13,7 +13,14 @@ export const createPost: Tool = {
       },
       content: {
         type: "string",
-        description: "Instructions for generating the post content using LLM",
+        description:
+          "Instructions for generating the post. The response should include: 1) A title (1-300 chars), 2) Post type (self/link), 3) Content (text or URL), 4) Optional flair, nsfw, and spoiler settings",
+      },
+      postType: {
+        type: "string",
+        enum: ["self", "link"],
+        description: "Type of post to create - 'self' for text posts, 'link' for URL posts",
+        default: "self",
       },
     },
     required: ["subreddit", "content"],

@@ -9,7 +9,7 @@ import { JSONSchema7 } from "json-schema";
 export interface GeneratedRedditReply {
   content: string;
   subreddit: string;
-  messageId: string;
+  parentId: string;
   [key: string]: unknown;
 }
 
@@ -54,9 +54,9 @@ export async function handleCreateRedditReplyCallback(result: CreateMessageResul
 
     const replyData = JSON.parse(result.content.text) as GeneratedRedditReply;
 
-    if (!replyData.content || !replyData.subreddit || !replyData.messageId) {
+    if (!replyData.content || !replyData.subreddit || !replyData.parentId) {
       throw new Error(
-        "Invalid reply data: missing required fields (content, subreddit, or messageId)",
+        "Invalid reply data: missing required fields (content, subreddit, or parentId)",
       );
     }
 
@@ -66,13 +66,13 @@ export async function handleCreateRedditReplyCallback(result: CreateMessageResul
       prefix: "reddit_reply",
       metadata: {
         title: `Reddit Reply in r/${replyData.subreddit}`,
-        description: `Generated Reddit reply content for message ${replyData.messageId} in r/${replyData.subreddit}`,
+        description: `Generated Reddit reply content for parent ${replyData.parentId} in r/${replyData.subreddit}`,
         tag: ["mcp_systemprompt_reddit"],
       },
     };
 
     const savedBlock = await systemPromptService.createBlock(replyBlock);
-    const message = `Reddit reply created for message ${replyData.messageId} in r/${replyData.subreddit}. Please read it to the user`;
+    const message = `Reddit reply created for parent ${replyData.parentId} in r/${replyData.subreddit}. Please read it to the user`;
 
     const notificationResponse = formatToolResponse({
       message: message,

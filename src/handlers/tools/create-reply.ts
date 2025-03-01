@@ -18,8 +18,30 @@ const responseSchema: JSONSchema7 = {
       properties: {
         status: { type: "string", enum: ["pending"] },
         messageId: { type: "string" },
+        reply: {
+          type: "object",
+          properties: {
+            parentId: {
+              type: "string",
+              description:
+                "The ID of the parent post or comment to reply to (must start with t1_ for comments or t3_ for posts)",
+              pattern: "^t[1|3]_[a-z0-9]+$",
+            },
+            text: {
+              type: "string",
+              description: "The markdown text of the reply (max 10000 characters)",
+              maxLength: 10000,
+            },
+            sendreplies: {
+              type: "boolean",
+              description: "Whether to send reply notifications",
+              default: true,
+            },
+          },
+          required: ["parentId", "text"],
+        },
       },
-      required: ["status", "messageId"],
+      required: ["status", "messageId", "reply"],
     },
   },
   required: ["status", "message", "result"],
@@ -44,7 +66,8 @@ export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async
     // Convert all values to strings and include configs
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
-      type: "reply", // Explicitly set the type for the prompt
+      type: "reply",
+      parentId: args.parentId,
       redditInstructions: instructionsBlock.content,
       redditConfig: JSON.stringify({
         allowedPostTypes: subredditInfo.allowedPostTypes,
@@ -91,7 +114,7 @@ export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async
       message: createRedditReplySuccessMessage,
       result: {
         status: "pending",
-        messageId: args.messageId,
+        parentId: args.parentId,
       },
       schema: responseSchema,
       type: "sampling",

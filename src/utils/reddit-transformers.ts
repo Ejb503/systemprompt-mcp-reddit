@@ -161,34 +161,46 @@ export const transformSubreddit = (data: unknown): RedditSubreddit => {
 };
 
 export const transformNotification = (data: Record<string, unknown>): ApiRedditNotification => {
-  // Determine notification type
+  // Determine notification type and subject
   let type: ApiRedditNotification["type"] = "other";
+  let subject = String(data.subject || "");
+
+  // For comment replies, we need to check link_title to determine if it's a post or comment reply
   if (data.was_comment) {
-    if (data.parentId && typeof data.parentId === "string" && data.parentId.startsWith("t3_")) {
+    const parentId = String(data.parent_id || "");
+    if (parentId.startsWith("t3_")) {
       type = "post_reply";
+      // For post replies, use the post title as subject
+      subject = String(data.link_title || "Comment on your post");
     } else {
       type = "comment_reply";
+      // For comment replies, use a descriptive subject
+      subject = "Reply to your comment";
     }
   } else if (data.subject === "username mention") {
     type = "username_mention";
+    subject = "Username mention";
   } else if (data.subject && !data.was_comment) {
     type = "message";
+    // For messages, use the original subject
+    subject = String(data.subject);
   }
 
   return {
     id: String(data.name || ""), // name contains the full ID with prefix
     name: String(data.name || ""),
     type,
-    subject: String(data.subject || ""),
+    subject,
     body: String(data.body || ""),
     createdUtc: Number(data.created_utc || 0),
     date: data.date instanceof Date ? data.date : new Date(),
     author: String(data.author || "[deleted]"),
     subreddit: typeof data.subreddit === "string" ? data.subreddit : undefined,
     context: typeof data.context === "string" ? data.context : undefined,
-    parentId: typeof data.parentId === "string" ? data.parentId : undefined,
+    parentId: typeof data.parent_id === "string" ? data.parent_id : undefined,
     isNew: Boolean(data.new),
-    permalink: typeof data.context === "string" ? data.context : undefined,
+    permalink:
+      typeof data.permalink === "string" ? data.permalink : (data.context as string | undefined),
   };
 };
 
@@ -198,7 +210,8 @@ export function transformToConfigNotification(
   return {
     id: notification.id,
     type: notification.type,
-    parent_id: notification.parentId || "", // Use parentId consistently
+    subject: notification.subject,
+    parent_id: notification.parentId || "",
     subreddit: notification.subreddit || "",
     author: notification.author,
     body: notification.body || "",

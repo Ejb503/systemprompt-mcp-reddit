@@ -28,7 +28,7 @@ import {
   AnalyseSubredditArgs,
   CreateRedditPostArgs,
   CreateRedditReplyArgs,
-  SendRedditPostArgs,
+  SendPostArgs,
   SearchRedditArgs,
   ConfigureInstructionsArgs,
   SendReplyArgs,
@@ -43,7 +43,7 @@ type ToolArgs = {
   analyse_subreddit: AnalyseSubredditArgs;
   create_reddit_post: CreateRedditPostArgs;
   create_reddit_reply: CreateRedditReplyArgs;
-  send_post: SendRedditPostArgs;
+  send_post: SendPostArgs;
   search_reddit: SearchRedditArgs;
   send_reply: SendReplyArgs;
   get_comment: GetCommentArgs;
@@ -94,7 +94,7 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
       case "search_reddit":
         return await handleSearchReddit(args as SearchRedditArgs, context);
       case "send_post":
-        return await handleSendPost(args as SendRedditPostArgs, context);
+        return await handleSendPost(args as SendPostArgs, context);
       case "send_reply":
         return await handleSendReply(args as SendReplyArgs, context);
       case "get_comment":

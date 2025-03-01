@@ -14,6 +14,7 @@ import {
   SubscribedSubreddit,
   RedditComment,
   RedditCommentThread,
+  SubredditFlair,
 } from "@/types/reddit.js";
 import type {
   RedditConfigData,
@@ -24,6 +25,18 @@ import { RedditAuthService } from "./reddit-auth-service.js";
 import { RedditPostService } from "./reddit-post-service.js";
 import { RedditSubredditService } from "./reddit-subreddit-service.js";
 import { transformToConfigNotification } from "../../utils/reddit-transformers.js";
+
+interface FlairResponse {
+  choices: Array<{
+    flair_template_id: string;
+    text: string;
+    text_editable: boolean;
+    type: string;
+    background_color: string;
+    text_color: string;
+    mod_only: boolean;
+  }>;
+}
 
 /**
  * Main service for interacting with the Reddit API
@@ -185,7 +198,8 @@ export class RedditService {
     options: FetchNotificationsOptions = {},
   ): Promise<ApiRedditNotification[]> {
     this.checkInitialized();
-    return this.postService.fetchNotifications(options);
+    const response = await this.postService.fetchNotifications(options);
+    return response;
   }
 
   /**
@@ -332,6 +346,31 @@ export class RedditService {
     }
 
     return this.postService.sendReply(params.parentId, params.text);
+  }
+
+  /**
+   * Fetches available post flairs for a subreddit
+   * @param subreddit The subreddit name (without r/ prefix)
+   * @returns Array of available flairs
+   */
+  async getSubredditFlairs(subreddit: string): Promise<SubredditFlair[]> {
+    try {
+      const response = await this.subredditService.getFlairs(subreddit);
+
+      return response.choices.map((flair: FlairResponse["choices"][0]) => ({
+        id: flair.flair_template_id,
+        text: flair.text,
+        type: flair.type as "text" | "richtext" | "image",
+        textEditable: flair.text_editable,
+        backgroundColor: flair.background_color,
+        textColor: flair.text_color,
+        modOnly: flair.mod_only,
+      }));
+    } catch (error) {
+      // If we can't fetch flairs (e.g., no permission, subreddit doesn't exist), return empty array
+      console.warn(`Failed to fetch flairs for subreddit ${subreddit}:`, error);
+      return [];
+    }
   }
 
   private checkInitialized() {
