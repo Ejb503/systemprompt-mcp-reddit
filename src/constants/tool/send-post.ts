@@ -1,7 +1,7 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export const sendRedditPost: Tool = {
-  name: "send_reddit_post",
+  name: "send_post",
   description: "Sends a new post to Reddit",
   inputSchema: {
     type: "object",
