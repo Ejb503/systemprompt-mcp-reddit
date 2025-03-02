@@ -7,20 +7,29 @@ import {
 import { SystemPromptService } from "../services/systemprompt-service.js";
 import { SystempromptBlockResponse } from "@/types/systemprompt.js";
 import {
+  ACTIONS,
+  getAvailableActions,
   getRedditSchemas,
   createResourceMetadata,
-  getAvailableActions,
-  assertRedditPostArgs,
-  assertRedditReplyArgs,
-  ACTIONS,
-} from "../utils/reddit-resource-utils.js";
+} from "./action-schema.js";
 
 const PREFIX_SATISFIES_MAP = {
-  reddit_config: ["configure_reddit"],
-  reddit_instructions: ["configure_instructions"],
+  reddit_instructions: [ACTIONS.CONFIGURE_INSTRUCTIONS],
   reddit_post: [ACTIONS.CREATE_POST],
   reddit_reply: [ACTIONS.CREATE_REPLY],
 };
+
+function getResourceType(prefix: string): string {
+  switch (prefix) {
+    case "reddit_post":
+    case "reddit_reply":
+      return "SendReddit";
+    case "reddit_instructions":
+      return "EditContent";
+    default:
+      return "SummarizeContent";
+  }
+}
 
 export async function handleListResources(
   request: ListResourcesRequest,
@@ -31,18 +40,12 @@ export async function handleListResources(
     tags: ["mcp_systemprompt_reddit"],
   });
 
-  // Filter for Reddit resources and convert to resource URIs
   const resources = blocks.map((block: SystempromptBlockResponse) => {
-    // Determine what this block satisfies based on its prefix
-    const satisfies = PREFIX_SATISFIES_MAP[block.prefix as keyof typeof PREFIX_SATISFIES_MAP] || [];
-
-    // Parse content as initialData for reddit_post and reddit_reply
     let initialData = undefined;
     if (block.prefix === "reddit_post" || block.prefix === "reddit_reply") {
       try {
         initialData = JSON.parse(block.content);
       } catch (error) {
-        // If content is not valid JSON, use it as is
         initialData = { content: block.content };
       }
     }
@@ -51,10 +54,10 @@ export async function handleListResources(
       name: block.prefix,
       _meta: {
         actions: getAvailableActions(block.prefix),
-        schema: getRedditSchemas(),
+        schema: getRedditSchemas(block.prefix),
         server_id: "5bd646cc-f499-4a37-9ebd-0fae39037bd8",
-        satisfies,
         ...(initialData && { initialData }),
+        type: getResourceType(block.prefix),
       },
     };
   });
@@ -79,11 +82,7 @@ export async function handleResourceCall(
 
   try {
     const block = await systemPromptService.getBlock(blockId);
-
-    // Determine what this block satisfies based on its prefix
     const satisfies = PREFIX_SATISFIES_MAP[block.prefix as keyof typeof PREFIX_SATISFIES_MAP] || [];
-
-    // Parse content as initialData for reddit_post and reddit_reply
     let initialData = undefined;
     if (block.prefix === "reddit_post" || block.prefix === "reddit_reply") {
       try {
@@ -105,6 +104,7 @@ export async function handleResourceCall(
       _meta: {
         ...createResourceMetadata(block),
         availableActions: getAvailableActions(block.prefix),
+        schema: getRedditSchemas(block.prefix),
         server_id: "5bd646cc-f499-4a37-9ebd-0fae39037bd8",
         satisfies,
         ...(initialData && { initialData }),
@@ -115,18 +115,4 @@ export async function handleResourceCall(
       `Resource not found: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
-}
-
-export async function handleCreateRedditPost(args: unknown) {
-  const typedArgs = assertRedditPostArgs(args);
-
-  // Now you can use typedArgs with the correct type
-  // typedArgs.subreddit, typedArgs.title, etc. are now properly typed
-
-  // Your implementation...
-}
-
-export async function handleCreateRedditReply(args: unknown) {
-  const typedArgs = assertRedditReplyArgs(args);
-  // Your implementation...
 }

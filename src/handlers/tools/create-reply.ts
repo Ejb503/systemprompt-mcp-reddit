@@ -17,7 +17,7 @@ const responseSchema: JSONSchema7 = {
       type: "object",
       properties: {
         status: { type: "string", enum: ["pending"] },
-        messageId: { type: "string" },
+        parentId: { type: "string" },
         reply: {
           type: "object",
           properties: {
@@ -41,7 +41,7 @@ const responseSchema: JSONSchema7 = {
           required: ["parentId", "text"],
         },
       },
-      required: ["status", "messageId", "reply"],
+      required: ["status", "parentId", "reply"],
     },
   },
   required: ["status", "message", "result"],

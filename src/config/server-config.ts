@@ -2,7 +2,7 @@ import { Implementation, ServerCapabilities } from "@modelcontextprotocol/sdk/ty
 
 export const serverConfig: Implementation = {
   name: "systemprompt-mcp-reddit",
-  version: "1.0.15",
+  version: "1.0.18",
   metadata: {
     name: "System Prompt MCP Reddit",
     description:

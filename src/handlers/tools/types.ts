@@ -179,3 +179,15 @@ export interface SendReplyArgs {
   /** Whether to send reply notifications */
   sendreplies?: boolean;
 }
+
+export interface DeleteContentArgs {
+  /** The ID of the resource to delete */
+  resourceId: string;
+}
+
+export interface EditContentArgs {
+  /** The ID of the resource to edit */
+  resourceId: string;
+  /** The new content for the resource */
+  content: string;
+}

@@ -45,7 +45,7 @@ interface FlairResponse {
 export class RedditService {
   private static instance: RedditService;
   private readonly baseUrl = "https://oauth.reddit.com";
-  private readonly rateLimitDelay = 1000; // 1 request per second
+  private readonly rateLimitDelay = 2000; // 1 request per second
   private initialized = false;
 
   private authService: RedditAuthService;
@@ -53,6 +53,8 @@ export class RedditService {
   private subredditService: RedditSubredditService;
 
   private constructor() {
+    this.initialized = false;
+
     const config = this.loadConfig();
     this.authService = new RedditAuthService(config);
     this.postService = new RedditPostService(this.baseUrl, this.authService, this.rateLimitDelay);

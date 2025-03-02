@@ -11,7 +11,7 @@ export const CREATE_REDDIT_REPLY_PROMPT: SamplingPrompt = {
       required: true,
     },
     {
-      name: "messageId",
+      name: "parentId",
       description: "ID of message to reply to",
       required: true,
     },
@@ -50,7 +50,7 @@ export const CREATE_REDDIT_REPLY_PROMPT: SamplingPrompt = {
         text: `Create a Reddit reply with these parameters:
 
 Subreddit: {{subreddit}}
-Replying to: {{messageId}}
+Replying to: {{parentId}}
 
 Content Instructions: {{content}}
 

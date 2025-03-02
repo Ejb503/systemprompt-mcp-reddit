@@ -10,6 +10,8 @@ import { sendRedditPost } from "@/constants/tool/send-post.js";
 import { searchReddit } from "@/constants/tool/search-reddit.js";
 import { sendReply } from "@/constants/tool/send-reply.js";
 import { getComment } from "@/constants/tool/get-comment.js";
+import { deleteContent } from "@/constants/tool/delete-content.js";
+import { editContent } from "@/constants/tool/edit-content.js";
 import { RedditConfigData } from "@/types/config.js";
 
 export const TOOL_ERROR_MESSAGES = {
@@ -33,6 +35,8 @@ export const TOOLS: Tool[] = [
   searchReddit,
   sendReply,
   getComment,
+  deleteContent,
+  editContent,
 ];
 
 export function populateToolsInitialData(tools: Tool[], configData: RedditConfigData): Tool[] {
