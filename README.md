@@ -8,7 +8,7 @@
 
 [Website](https://systemprompt.io) | [Documentation](https://systemprompt.io/documentation) | [Blog](https://tyingshoelaces.com) | [Get API Key](https://systemprompt.io/console)
 
-A specialized Model Context Protocol (MCP) server that enables AI agents to interact with Reddit, including reading posts, creating content, and managing subreddit configurations. The server is designed to work with advanced MCP clients that support sampling and notification features.
+A specialized Model Context Protocol (MCP) server that enables AI agents to interact with Reddit, including reading posts, creating content, and managing subreddit configurations. The server is designed to work specifically with [systemprompt.io](https://systemprompt.io) client that support sampling and notification features, and may not function properly with other MCP clients.
 
 An API KEY is required to use this server. This is currently free, although this may change in the future. You can get one [here](https://systemprompt.io/console).
 
@@ -36,6 +36,42 @@ This server uses Sampling and Notification functionality from the [@modelcontext
 - **Type-Safe Implementation**: Complete TypeScript support
 - **Real-Time Processing**: Supports streaming responses
 - **Advanced Error Handling**: Comprehensive error management
+
+## System Architecture
+
+This project follows a modular architecture designed to be adaptable for other MCP server implementations:
+
+### Core Components
+
+- **MCP Protocol Layer**: Implements the complete Model Context Protocol
+- **Service Layer**: Abstracts Reddit API interactions
+- **Handler Layer**: Routes and processes MCP requests
+- **Tool Layer**: Defines operations AI agents can perform
+- **Utility Layer**: Provides helpers for validation and data transformation
+
+### Directory Structure
+
+- `/src/config`: Server configuration and capabilities
+- `/src/constants`: Tool schemas, sampling templates, and system constants
+- `/src/handlers`: Request handlers and tool implementations
+- `/src/services`: API integration services
+- `/src/types`: TypeScript type definitions
+- `/src/utils`: Utility functions and helpers
+
+For detailed documentation of the architecture and implementation patterns, see:
+- [ARCHITECTURE.md](./ARCHITECTURE.md): Complete system overview
+- [TEMPLATE_GUIDE.md](./TEMPLATE_GUIDE.md): Guide for creating new MCP servers
+
+## Using as a Template
+
+This codebase is designed to serve as a template for creating other MCP servers. The modular architecture makes it straightforward to replace the Reddit integration with other APIs:
+
+1. Replace the service layer with your API implementation
+2. Define new tools appropriate for your domain
+3. Update type definitions and schemas
+4. Configure server capabilities
+
+See [TEMPLATE_GUIDE.md](./TEMPLATE_GUIDE.md) for detailed step-by-step instructions.
 
 ## 🎥 Demo & Showcase
 
