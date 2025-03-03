@@ -80,25 +80,16 @@ export class RedditPostService extends RedditFetchService {
   }
 
   public async createPost(params: RedditPostParams): Promise<RedditPostResponse> {
-    const { subreddit, title, kind, content, url } = params;
+    const { subreddit, title, content } = params;
 
-    if (kind === "self" && !content) {
-      throw new RedditError("Content is required for text posts", "VALIDATION_ERROR");
-    }
-
-    if (kind === "link" && !url) {
-      throw new RedditError("URL is required for link posts", "VALIDATION_ERROR");
+    if (!subreddit || !title || !content) {
+      throw new RedditError("Missing required fields", "VALIDATION_ERROR");
     }
 
     const formData = new URLSearchParams();
     formData.append("sr", subreddit);
     formData.append("title", title);
-    formData.append("kind", kind);
-    if (kind === "link" && url) {
-      formData.append("url", url);
-    } else if (content) {
-      formData.append("text", content);
-    }
+    formData.append("text", content);
 
     const response = await this.redditFetch<RedditPostResponse>("/api/submit", {
       method: "POST",
@@ -160,7 +151,7 @@ export class RedditPostService extends RedditFetchService {
     }
 
     return commentListing
-      .filter((item) => item.kind === "t1") // Filter out non-comment items
+      .filter((item) => item.kind === "t1")
       .map((item) => {
         const comment = transformComment(item.data);
 

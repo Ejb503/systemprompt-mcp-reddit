@@ -51,19 +51,16 @@ export const handleSendPost: ToolHandler<SendPostArgs> = async (args, { redditSe
   }
 
   try {
-    const { subreddit, title, content, kind = "self", url } = args;
+    const { subreddit, title, content } = args;
 
-    if (!subreddit || !title) {
+    if (!subreddit || !title || !content) {
       throw new RedditError("Missing required fields", "VALIDATION_ERROR");
     }
 
-    const postKind: RedditPostParams["kind"] = kind || (url ? "link" : "self");
     const postParams: RedditPostParams = {
       subreddit,
       title,
-      kind: postKind,
       content,
-      url,
     };
 
     const post = await redditService.createPost(postParams);

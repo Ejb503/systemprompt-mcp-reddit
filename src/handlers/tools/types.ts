@@ -118,7 +118,6 @@ export interface CreateRedditPostArgs {
   /** Instructions for generating the post content */
   content: string;
   /** Type of post to create */
-  kind?: "self" | "link";
 }
 
 export interface CreateRedditCommentArgs {
@@ -137,13 +136,8 @@ export interface SendPostArgs {
   subreddit: string;
   /** Post title (1-300 characters) */
   title: string;
-  /** Type of post - 'self' for text posts, 'link' for URL posts */
-  kind: "self" | "link";
   /** Text content for self posts */
   content?: string;
-  /** URL for link posts */
-  url?: string;
-  /** Flair ID if the subreddit requires it */
   flair_id?: string;
   /** Flair text if the subreddit requires it */
   flair_text?: string;

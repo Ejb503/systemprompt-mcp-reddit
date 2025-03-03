@@ -15,16 +15,6 @@ export const CREATE_REDDIT_POST_PROMPT: SamplingPrompt = {
       description: "Instructions for generating the post",
       required: true,
     },
-    {
-      name: "kind",
-      description: "Type of post (text or link)",
-      required: false,
-    },
-    {
-      name: "url",
-      description: "URL for link posts",
-      required: false,
-    },
   ],
   messages: [
     {
@@ -55,9 +45,6 @@ export const CREATE_REDDIT_POST_PROMPT: SamplingPrompt = {
         text: `Create a Reddit post following these parameters:
         
 Subreddit: {{subreddit}}
-Post Type: {{kind}}
-{{#url}}URL: {{url}}{{/url}}
-
 Content Instructions: {{content}}
 
 Ensure the post:

@@ -5,27 +5,43 @@ export const REDDIT_POST_RESPONSE_SCHEMA: JSONSchema7 = {
   properties: {
     title: {
       type: "string",
-      description: "Generated title for the post",
+      description: "Post title (1-300 characters)",
+      minLength: 1,
+      maxLength: 300,
     },
     content: {
       type: "string",
-      description: "Generated content for the post",
-    },
-    kind: {
-      type: "string",
-      enum: ["self", "link"],
-      description: "Type of post",
+      description: "Text content for the post",
     },
     subreddit: {
       type: "string",
-      description: "Subreddit to post to",
+      description: "Subreddit to post to (without r/ prefix)",
     },
-    url: {
+    flair_id: {
       type: "string",
-      description: "URL for link posts",
+      description: "Flair ID if the subreddit requires it",
+    },
+    flair_text: {
+      type: "string",
+      description: "Flair text if the subreddit requires it",
+    },
+    sendreplies: {
+      type: "boolean",
+      description: "Whether to send replies to inbox",
+      default: true,
+    },
+    nsfw: {
+      type: "boolean",
+      description: "Whether to mark as NSFW",
+      default: false,
+    },
+    spoiler: {
+      type: "boolean",
+      description: "Whether to mark as spoiler",
+      default: false,
     },
   },
-  required: ["title", "content", "kind", "subreddit"],
+  required: ["title", "content", "subreddit"],
 };
 
 export const REDDIT_COMMENT_RESPONSE_SCHEMA: JSONSchema7 = {

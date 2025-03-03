@@ -152,15 +152,6 @@ export class RedditService {
     if (params.title.length < 1 || params.title.length > 300) {
       throw new RedditError("Post title must be between 1 and 300 characters", "VALIDATION_ERROR");
     }
-
-    // Validate content based on post type
-    if (params.kind === "self" && (!params.content || params.content.length === 0)) {
-      throw new RedditError("Content is required for text posts", "VALIDATION_ERROR");
-    }
-    if (params.kind === "link" && (!params.url || !params.url.startsWith("http"))) {
-      throw new RedditError("Valid URL is required for link posts", "VALIDATION_ERROR");
-    }
-
     // Get subreddit requirements
     const subredditInfo = await this.getSubredditInfo(params.subreddit);
 

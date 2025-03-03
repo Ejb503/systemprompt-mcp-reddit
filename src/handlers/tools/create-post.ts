@@ -31,19 +31,9 @@ const responseSchema: JSONSchema7 = {
               minLength: 1,
               maxLength: 300,
             },
-            kind: {
-              type: "string",
-              enum: ["self", "link"],
-              description: "Type of post - 'self' for text posts, 'link' for URL posts",
-            },
             content: {
               type: "string",
-              description: "Text content for self posts",
-            },
-            url: {
-              type: "string",
-              description: "URL for link posts",
-              pattern: "^https?://",
+              description: "Text content for the post",
             },
             flair: {
               type: "object",
@@ -76,17 +66,7 @@ const responseSchema: JSONSchema7 = {
               default: false,
             },
           },
-          required: ["subreddit", "title", "kind"],
-          allOf: [
-            {
-              if: { properties: { kind: { const: "self" } } },
-              then: { required: ["content"] },
-            },
-            {
-              if: { properties: { kind: { const: "link" } } },
-              then: { required: ["url"] },
-            },
-          ],
+          required: ["subreddit", "title", "content"],
         },
         availableFlairs: {
           type: "array",
@@ -132,7 +112,6 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
       type: "post",
-      kind: args.kind || "self",
       flairRequired: String(subredditInfo.flairRequired || false),
       availableFlairs: JSON.stringify(flairs),
       subredditRules: JSON.stringify(subredditInfo),
@@ -185,7 +164,6 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
         subreddit: args.subreddit,
         post: {
           subreddit: args.subreddit,
-          kind: args.kind || "self",
           title: "", // Will be filled by sampling service
           content: "", // Will be filled by sampling service
           sendreplies: true,

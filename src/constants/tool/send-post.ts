@@ -2,10 +2,10 @@ import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export const sendRedditPost: Tool = {
   name: "send_post",
-  description: "Sends a new post to Reddit",
+  description: "Sends a new text post to Reddit",
   inputSchema: {
     type: "object",
-    required: ["subreddit", "title", "kind"],
+    required: ["subreddit", "title", "content"],
     properties: {
       subreddit: {
         type: "string",
@@ -17,19 +17,9 @@ export const sendRedditPost: Tool = {
         minLength: 1,
         maxLength: 300,
       },
-      kind: {
-        type: "string",
-        enum: ["self", "link"],
-        description: "Type of post - 'self' for text posts, 'link' for URL posts",
-      },
       content: {
         type: "string",
-        description: "Text content for self posts",
-      },
-      url: {
-        type: "string",
-        description: "URL for link posts",
-        pattern: "^https?://",
+        description: "Text content for the post",
       },
       flair_id: {
         type: "string",
@@ -55,16 +45,6 @@ export const sendRedditPost: Tool = {
         default: false,
       },
     },
-    allOf: [
-      {
-        if: { properties: { kind: { const: "self" } } },
-        then: { required: ["content"] },
-      },
-      {
-        if: { properties: { kind: { const: "link" } } },
-        then: { required: ["url"] },
-      },
-    ],
   },
   _meta: {
     hidden: true,

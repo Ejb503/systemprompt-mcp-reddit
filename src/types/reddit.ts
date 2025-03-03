@@ -108,8 +108,6 @@ export interface RedditPostParams {
   /** Post title (1-300 characters) */
   title: string;
   /** Type of post - 'self' for text posts, 'link' for URL posts */
-  kind: "self" | "link";
-  /** Text content for self posts */
   content?: string;
   /** URL for link posts */
   url?: string;

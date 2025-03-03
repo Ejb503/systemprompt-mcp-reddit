@@ -28,8 +28,6 @@ export const ACTIONS = {
 interface RedditPostArgs {
   subreddit: string;
   title: string;
-  kind: "link" | "self";
-  url?: string;
   content?: string;
 }
 
@@ -77,7 +75,6 @@ export const getRedditSchemas = (resourceType: string): Record<string, JSONSchem
       properties: {
         subreddit: { type: "string", description: "Subreddit to post to (without r/)" },
         content: { type: "string", description: "Instructions for generating the post content" },
-        kind: { type: "string", enum: ["self", "link"], description: "Type of post to create" },
       },
       required: ["subreddit", "content"],
       additionalProperties: false,
@@ -165,7 +162,7 @@ export const isRedditResource = (block: SystempromptBlockResponse): boolean =>
 export const assertRedditPostArgs = (args: unknown): RedditPostArgs => {
   const typedArgs = args as RedditPostArgs;
 
-  if (!typedArgs.subreddit || !typedArgs.title || !typedArgs.kind) {
+  if (!typedArgs.subreddit || !typedArgs.title) {
     throw new Error("Invalid Reddit post arguments: missing required fields");
   }
 
