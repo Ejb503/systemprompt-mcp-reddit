@@ -11,7 +11,7 @@ export interface GeneratedSuggestAction {
   subreddit?: string;
   reasoning: string;
   content?: string;
-  parentId?: string;
+  id?: string;
   [key: string]: unknown;
 }
 

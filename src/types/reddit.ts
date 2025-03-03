@@ -78,9 +78,9 @@ export interface RedditApiResponse<T> {
 
 export interface FetchPostsOptions {
   sort: "hot" | "new" | "controversial";
+  subreddit: string;
   timeFilter?: string;
   limit?: number;
-  subreddits?: string[];
 }
 
 export interface RedditServiceConfig {
@@ -152,7 +152,7 @@ export interface RedditReplyParams {
    * t1_ prefix for replying to comments
    * t3_ prefix for replying to posts
    */
-  parentId: string;
+  id: string;
   /** The markdown text of the comment (10000 char max) */
   text: string;
   /** Whether to send reply notifications */
@@ -166,8 +166,6 @@ export interface RedditReplyParams {
 export interface RedditReplyResponse {
   /** Comment ID with t1_ prefix */
   id: string;
-  /** Parent ID that was replied to */
-  parentId: string;
   /** The created comment's text */
   body: string;
   /** Full permalink to the comment */
@@ -295,6 +293,18 @@ export interface SubredditFlair {
   modOnly?: boolean;
 }
 
+export interface RedditCommentParams {
+  id: string;
+  text: string;
+  sendreplies?: boolean;
+}
+
+export interface RedditCommentResponse {
+  id: string;
+  text: string;
+  permalink: string;
+}
+
 export interface RedditService {
   // Authentication
   initialize(): Promise<void>;
@@ -303,8 +313,8 @@ export interface RedditService {
   // Posts and Comments
   createPost(params: RedditPostParams): Promise<RedditPostResponse>;
   sendReply(params: RedditReplyParams): Promise<RedditReplyResponse>;
-  getPost(postId: string): Promise<RedditPost>;
-  getComment(commentId: string): Promise<RedditComment>;
+  getPost(id: string): Promise<RedditPost>;
+  getComment(id: string): Promise<RedditComment>;
 
   // Subreddit Information
   getSubredditInfo(subreddit: string): Promise<RedditSubreddit>;
@@ -325,4 +335,6 @@ export interface RedditService {
   fetchSubscribedSubreddits(
     options?: FetchSubscribedSubredditsOptions,
   ): Promise<SubscribedSubreddit[]>;
+
+  sendComment(params: RedditCommentParams): Promise<RedditCommentResponse>;
 }

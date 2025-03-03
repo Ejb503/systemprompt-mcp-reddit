@@ -5,9 +5,9 @@ export const getComment: Tool = {
   description: "Fetches a Reddit comment and optionally its full thread of replies",
   inputSchema: {
     type: "object",
-    required: ["commentId"],
+    required: ["id"],
     properties: {
-      commentId: {
+      id: {
         type: "string",
         description: "The ID of the comment to fetch",
       },
@@ -15,11 +15,6 @@ export const getComment: Tool = {
         type: "boolean",
         description: "Whether to fetch the entire comment thread with replies",
         default: false,
-      },
-      postId: {
-        type: "string",
-        description:
-          "The ID of the post containing the comment (required if includeThread is true)",
       },
     },
   },

@@ -6,17 +6,12 @@ export const deleteContent: Tool = {
   inputSchema: {
     type: "object",
     properties: {
-      resourceId: {
+      id: {
         type: "string",
         description: "The ID of the resource to delete",
       },
-      resourceType: {
-        type: "string",
-        enum: ["post", "reply", "comment", "block"],
-        description: "The type of resource being deleted",
-      },
     },
-    required: ["resourceId", "resourceType"],
+    required: ["id"],
   },
   _meta: {
     displayTitle: "Delete Content",

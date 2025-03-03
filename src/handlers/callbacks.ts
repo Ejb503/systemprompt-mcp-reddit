@@ -1,13 +1,19 @@
-export {
+import {
   handleCreateRedditPostCallback,
-  handleCreateRedditReplyCallback,
+  handleCreateRedditCommentCallback,
   handleAnalyseSubredditCallback,
   handleSuggestActionCallback,
 } from "./callbacks/index.js";
 
+export {
+  handleCreateRedditPostCallback,
+  handleCreateRedditCommentCallback,
+  handleAnalyseSubredditCallback,
+  handleSuggestActionCallback,
+};
+
 export type {
   GeneratedRedditPost,
-  GeneratedRedditReply,
   GeneratedSubredditAnalysis,
   GeneratedSuggestAction,
 } from "./callbacks/index.js";

@@ -4,10 +4,9 @@ export * from "./get-post.js";
 export * from "./get-notifications.js";
 export * from "./analyse-subreddit.js";
 export * from "./create-post.js";
-export * from "./create-reply.js";
+export * from "./create-comment.js";
 export * from "./send-post.js";
 export * from "./search-reddit.js";
-export * from "./send-reply.js";
 export * from "./get-comment.js";
 export * from "./configure-instructions.js";
 export * from "./delete-content.js";
@@ -18,14 +17,14 @@ export type {
   ToolHandlerContext,
   GetChannelPostsArgs,
   GetPostArgs,
-  GetRedditNotificationsArgs,
+  GetNotificationsArgs,
   AnalyseSubredditArgs,
   CreateRedditPostArgs,
-  CreateRedditReplyArgs,
+  CreateRedditCommentArgs,
   SendPostArgs,
   SearchRedditArgs,
   ConfigureInstructionsArgs,
-  SendReplyArgs,
+  SendCommentArgs,
   GetCommentArgs,
   DeleteContentArgs,
   EditContentArgs,
@@ -37,11 +36,11 @@ export type {
 export { handleConfigureInstructions } from "./configure-instructions.js";
 export { handleGetChannelPosts } from "./get-posts.js";
 export { handleGetPost } from "./get-post.js";
-export { handleGetRedditNotifications } from "./get-notifications.js";
+export { handleGetNotifications } from "./get-notifications.js";
 export { handleAnalyseSubreddit } from "./analyse-subreddit.js";
 export { handleCreateRedditPost } from "./create-post.js";
-export { handleCreateRedditReply } from "./create-reply.js";
+export { handleCreateRedditComment } from "./create-comment.js";
 export { handleSendPost } from "./send-post.js";
 export { handleSearchReddit } from "./search-reddit.js";
-export { handleSendReply } from "./send-reply.js";
 export { handleGetComment } from "./get-comment.js";
+export { handleSendComment } from "./send-comment.js";

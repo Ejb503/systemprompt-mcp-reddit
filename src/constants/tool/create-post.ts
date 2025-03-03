@@ -16,7 +16,7 @@ export const createPost: Tool = {
         description:
           "Instructions for generating the post. The response should include: 1) A title (1-300 chars), 2) Post type (self/link), 3) Content (text or URL), 4) Optional flair, nsfw, and spoiler settings",
       },
-      postType: {
+      kind: {
         type: "string",
         enum: ["self", "link"],
         description: "Type of post to create - 'self' for text posts, 'link' for URL posts",

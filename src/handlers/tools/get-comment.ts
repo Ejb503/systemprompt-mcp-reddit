@@ -34,15 +34,26 @@ const commentThreadSchema: JSONSchema7 = {
 
 export const handleGetComment: ToolHandler<GetCommentArgs> = async (args, { redditService }) => {
   try {
-    const { commentId, includeThread, postId } = args;
+    const { id, includeThread } = args;
 
-    if (!commentId) {
-      throw new RedditError("commentId is required for fetching comments", "VALIDATION_ERROR");
+    if (!id) {
+      throw new RedditError("id is required for fetching comments", "VALIDATION_ERROR");
     }
 
-    // If includeThread is true and postId is provided, fetch the entire thread
-    if (includeThread && postId) {
-      const commentThread = await redditService.fetchCommentThread(postId, commentId);
+    // First fetch the single comment to get its permalink
+    const comment = await redditService.fetchCommentById(id);
+
+    // If includeThread is true, fetch the entire thread using the post ID from permalink
+    if (includeThread) {
+      // Extract post ID from permalink (format: /r/subreddit/comments/id/...)
+      const idFromPermalink = comment.permalink.split("/")[4];
+      if (!idFromPermalink) {
+        throw new RedditError("Could not extract post ID from permalink", "VALIDATION_ERROR");
+      }
+
+      const parentId = `t3_${idFromPermalink}`;
+      const commentThread = await redditService.fetchCommentThread(parentId, id);
+
       return formatToolResponse({
         message: getCommentSuccessMessage,
         result: {
@@ -60,8 +71,7 @@ export const handleGetComment: ToolHandler<GetCommentArgs> = async (args, { redd
       });
     }
 
-    // Otherwise, just fetch the single comment
-    const comment = await redditService.fetchCommentById(commentId);
+    // Otherwise, just return the single comment
     return formatToolResponse({
       message: getCommentSuccessMessage,
       result: {

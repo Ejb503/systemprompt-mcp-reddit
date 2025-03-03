@@ -132,7 +132,7 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
       type: "post",
-      postType: args.postType || "self",
+      kind: args.kind || "self",
       flairRequired: String(subredditInfo.flairRequired || false),
       availableFlairs: JSON.stringify(flairs),
       subredditRules: JSON.stringify(subredditInfo),
@@ -185,7 +185,7 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
         subreddit: args.subreddit,
         post: {
           subreddit: args.subreddit,
-          kind: args.postType || "self",
+          kind: args.kind || "self",
           title: "", // Will be filled by sampling service
           content: "", // Will be filled by sampling service
           sendreplies: true,

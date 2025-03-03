@@ -31,19 +31,19 @@ export const handleAnalyseSubreddit: ToolHandler<AnalyseSubredditArgs> = async (
   try {
     const hotPosts = await redditService.fetchPosts({
       sort: "hot",
-      subreddits: [args.subreddit],
+      subreddit: args.subreddit,
       limit: 10,
     });
 
     const newPosts = await redditService.fetchPosts({
       sort: "new",
-      subreddits: [args.subreddit],
+      subreddit: args.subreddit,
       limit: 10,
     });
 
     const controversialPosts = await redditService.fetchPosts({
       sort: "controversial",
-      subreddits: [args.subreddit],
+      subreddit: args.subreddit,
       limit: 10,
     });
 

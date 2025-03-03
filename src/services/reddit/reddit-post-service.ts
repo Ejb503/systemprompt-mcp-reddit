@@ -24,33 +24,11 @@ export class RedditPostService extends RedditFetchService {
     super(baseUrl, authService, rateLimitDelay);
   }
 
-  public async fetchPosts(options: FetchPostsOptions = { sort: "hot" }): Promise<RedditPost[]> {
-    const { sort = "hot", limit = 10, subreddits = [] } = options;
-
-    if (subreddits.length > 0) {
-      const promises = subreddits.map((subreddit) =>
-        this.fetchSubredditPosts(subreddit, sort, limit),
-      );
-      return Promise.all(promises).then((results) => results.flat());
-    }
-
-    switch (sort) {
-      case "hot":
-        return this.getHotPosts(undefined, limit);
-      case "new":
-        return this.getNewPosts(undefined, limit);
-      case "controversial":
-        return this.getControversialPosts(undefined, limit);
-      default:
-        throw new RedditError(`Invalid sort option: ${sort}`, "VALIDATION_ERROR");
-    }
-  }
-
-  private async fetchSubredditPosts(
-    subreddit: string,
-    sort: "hot" | "new" | "controversial",
-    limit: number,
+  public async fetchPosts(
+    options: FetchPostsOptions = { sort: "hot", subreddit: "" },
   ): Promise<RedditPost[]> {
+    const { sort = "hot", limit = 25, subreddit } = options;
+
     switch (sort) {
       case "hot":
         return this.getHotPosts(subreddit, limit);
@@ -130,24 +108,24 @@ export class RedditPostService extends RedditFetchService {
     return response;
   }
 
-  public async fetchPostById(postId: string): Promise<RedditPostWithComments> {
+  public async fetchPostById(id: string): Promise<RedditPostWithComments> {
     try {
       // Reddit API requires the post ID to be prefixed with t3_
-      const formattedId = postId.startsWith("t3_") ? postId : `t3_${postId}`;
+      const formattedId = id.startsWith("t3_") ? id : `t3_${id}`;
 
       // First, fetch the post info
       const postEndpoint = `/api/info.json?id=${formattedId}`;
       const postData = await this.redditFetch<RedditApiResponse<RedditPost>>(postEndpoint);
 
       if (!postData.data.children || postData.data.children.length === 0) {
-        throw new RedditError(`Post with ID ${postId} not found`, "API_ERROR");
+        throw new RedditError(`Post with ID ${id} not found`, "API_ERROR");
       }
 
       const post = transformPost(postData.data.children[0].data);
 
       // Then fetch the comments
-      const rawPostId = postId.replace("t3_", "");
-      const commentsEndpoint = `/comments/${rawPostId}.json`;
+      const rawid = id.replace("t3_", "");
+      const commentsEndpoint = `/comments/${rawid}.json`;
       const commentsData = await this.redditFetch<any[]>(commentsEndpoint);
 
       // Reddit returns an array with 2 elements: [0] = post data, [1] = comments data
@@ -312,19 +290,19 @@ export class RedditPostService extends RedditFetchService {
 
   /**
    * Fetches a single comment by its ID
-   * @param commentId - The ID of the comment to fetch
+   * @param id - The ID of the comment to fetch
    * @returns Promise<RedditComment>
    */
-  public async fetchCommentById(commentId: string): Promise<RedditComment> {
+  public async fetchCommentById(id: string): Promise<RedditComment> {
     try {
       // Reddit API requires the comment ID to be prefixed with t1_
-      const formattedId = commentId.startsWith("t1_") ? commentId : `t1_${commentId}`;
+      const formattedId = id.startsWith("t1_") ? id : `t1_${id}`;
 
       const endpoint = `/api/info.json?id=${formattedId}`;
       const response = await this.redditFetch<RedditApiResponse<RedditComment>>(endpoint);
 
       if (!response.data.children || response.data.children.length === 0) {
-        throw new RedditError(`Comment with ID ${commentId} not found`, "API_ERROR");
+        throw new RedditError(`Comment with ID ${id} not found`, "API_ERROR");
       }
 
       return transformComment(response.data.children[0].data);
@@ -339,19 +317,14 @@ export class RedditPostService extends RedditFetchService {
 
   /**
    * Fetches a comment thread (comment with all its replies) by the comment ID and post ID
-   * @param postId - The ID of the post containing the comment
-   * @param commentId - The ID of the comment to fetch with its replies
+   * @param id - The ID of the post containing the comment
+   * @param id - The ID of the comment to fetch with its replies
    * @returns Promise<RedditCommentThread>
    */
-  public async fetchCommentThread(postId: string, commentId: string): Promise<RedditCommentThread> {
+  public async fetchCommentThread(parentId: string, id: string): Promise<RedditCommentThread> {
     try {
-      // Remove t3_ prefix if present in postId
-      const rawPostId = postId.replace("t3_", "");
-      // Remove t1_ prefix if present in commentId
-      const rawCommentId = commentId.replace("t1_", "");
-
       // Reddit API endpoint for fetching a specific comment thread
-      const endpoint = `/comments/${rawPostId}/comment/${rawCommentId}.json`;
+      const endpoint = `/comments/${parentId.replace("t3_", "")}/comment/${id.replace("t1_", "")}.json`;
       const response = await this.redditFetch<any[]>(endpoint);
 
       if (!response || response.length < 2 || !response[1].data.children?.[0]) {
@@ -418,14 +391,14 @@ export class RedditPostService extends RedditFetchService {
 
   /**
    * Sends a reply to a post or comment
-   * @param parentId - The ID of the parent post or comment to reply to
+   * @param id - The ID of the parent post or comment to reply to
    * @param text - The content of the reply
    * @returns Promise<any> - The API response
    */
-  public async sendReply(parentId: string, text: string): Promise<any> {
+  public async sendReply(id: string, text: string): Promise<any> {
     try {
       const formData = new URLSearchParams({
-        parent: parentId,
+        parent: id,
         text: text,
       });
 
@@ -441,6 +414,29 @@ export class RedditPostService extends RedditFetchService {
         "API_ERROR",
         error,
       );
+    }
+  }
+
+  public async sendComment(id: string, text: string): Promise<any> {
+    try {
+      const response = await this.redditFetch<any>("/api/comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          parent_id: id,
+          text,
+        }).toString(),
+      });
+
+      return {
+        id: response.id,
+        text: response.text,
+        permalink: response.permalink,
+      };
+    } catch (error) {
+      throw error;
     }
   }
 }

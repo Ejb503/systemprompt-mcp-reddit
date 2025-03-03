@@ -86,10 +86,10 @@ export interface GetChannelPostsArgs {
 }
 
 export interface GetPostArgs {
-  postId: string;
+  id: string;
 }
 
-export interface GetRedditNotificationsArgs {
+export interface GetNotificationsArgs {
   filter?: "all" | "unread" | "messages" | "comments" | "mentions";
   limit?: number;
   markRead?: boolean;
@@ -118,23 +118,21 @@ export interface CreateRedditPostArgs {
   /** Instructions for generating the post content */
   content: string;
   /** Type of post to create */
-  postType?: "self" | "link";
+  kind?: "self" | "link";
 }
 
-export interface CreateRedditReplyArgs {
+export interface CreateRedditCommentArgs {
   /** Subreddit where the reply will be posted */
   subreddit: string;
   /** Instructions for generating the reply content */
   content: string;
   /** ID of the parent post/comment to reply to */
-  parentId: string;
-  /** Type of parent (comment or post) */
-  parentType: "comment" | "post";
+  id: string;
 }
 
 export interface SendPostArgs {
   /** ID of the parent post/comment being responded to */
-  parentId: string;
+  id: string;
   /** Subreddit to post to (without r/ prefix) */
   subreddit: string;
   /** Post title (1-300 characters) */
@@ -166,14 +164,13 @@ export interface SearchRedditArgs {
 }
 
 export interface GetCommentArgs {
-  commentId: string;
+  id: string;
   includeThread?: boolean;
-  postId?: string;
 }
 
 export interface SendReplyArgs {
   /** The ID of the parent post or comment to reply to (must start with t1_ for comments or t3_ for posts) */
-  parentId: string;
+  id: string;
   /** The markdown text of the reply (max 10000 characters) */
   text: string;
   /** Whether to send reply notifications */
@@ -182,12 +179,21 @@ export interface SendReplyArgs {
 
 export interface DeleteContentArgs {
   /** The ID of the resource to delete */
-  resourceId: string;
+  id: string;
 }
 
 export interface EditContentArgs {
   /** The ID of the resource to edit */
-  resourceId: string;
+  id: string;
   /** The new content for the resource */
   content: string;
+}
+
+export interface SendCommentArgs {
+  /** The ID of the post or comment to reply to */
+  id: string;
+  /** The content of the comment */
+  content: string;
+  /** Whether to send replies to inbox */
+  sendreplies?: boolean;
 }

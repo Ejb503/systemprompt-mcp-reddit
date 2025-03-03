@@ -38,6 +38,18 @@ interface FlairResponse {
   }>;
 }
 
+export interface RedditCommentParams {
+  id: string;
+  text: string;
+  sendreplies?: boolean;
+}
+
+export interface RedditCommentResponse {
+  id: string;
+  text: string;
+  permalink: string;
+}
+
 /**
  * Main service for interacting with the Reddit API
  * Implements facade pattern to coordinate between specialized services
@@ -126,17 +138,7 @@ export class RedditService {
    */
   public async fetchPosts(options: FetchPostsOptions): Promise<RedditPost[]> {
     this.checkInitialized();
-    if (!options.subreddits?.length) {
-      return this.postService.fetchPosts(options);
-    }
-
-    const promises = options.subreddits.map((subreddit: string) => {
-      return this.postService.fetchPosts({
-        subreddits: [subreddit],
-        ...options,
-      });
-    });
-    return Promise.all(promises).then((results) => results.flat());
+    return this.postService.fetchPosts(options);
   }
 
   /**
@@ -183,12 +185,12 @@ export class RedditService {
 
   /**
    * Fetches a single Reddit post by its ID
-   * @param postId The ID of the post to fetch
+   * @param id The ID of the post to fetch
    * @returns The fetched post with comments
    */
-  public async fetchPostById(postId: string): Promise<RedditPostWithComments> {
+  public async fetchPostById(id: string): Promise<RedditPostWithComments> {
     this.checkInitialized();
-    return this.postService.fetchPostById(postId);
+    return this.postService.fetchPostById(id);
   }
 
   /**
@@ -304,23 +306,23 @@ export class RedditService {
 
   /**
    * Fetches a single comment by its ID
-   * @param commentId The ID of the comment to fetch
+   * @param id The ID of the comment to fetch
    * @returns The fetched comment
    */
-  public async fetchCommentById(commentId: string): Promise<RedditComment> {
+  public async fetchCommentById(id: string): Promise<RedditComment> {
     this.checkInitialized();
-    return this.postService.fetchCommentById(commentId);
+    return this.postService.fetchCommentById(id);
   }
 
   /**
    * Fetches a comment thread (comment with all its replies)
-   * @param postId The ID of the post containing the comment
-   * @param commentId The ID of the comment to fetch
+   * @param id The ID of the post containing the comment
+   * @param id The ID of the comment to fetch
    * @returns The comment thread with all replies
    */
-  public async fetchCommentThread(postId: string, commentId: string): Promise<RedditCommentThread> {
+  public async fetchCommentThread(parentId: string, id: string): Promise<RedditCommentThread> {
     this.checkInitialized();
-    return this.postService.fetchCommentThread(postId, commentId);
+    return this.postService.fetchCommentThread(parentId, id);
   }
 
   /**
@@ -332,7 +334,7 @@ export class RedditService {
     this.checkInitialized();
 
     // Validate parent ID format
-    if (!params.parentId.match(/^t[1|3]_[a-z0-9]+$/i)) {
+    if (!params.id.match(/^t[1|3]_[a-z0-9]+$/i)) {
       throw new RedditError(
         "Invalid parent ID format. Must start with t1_ or t3_",
         "VALIDATION_ERROR",
@@ -347,7 +349,7 @@ export class RedditService {
       );
     }
 
-    return this.postService.sendReply(params.parentId, params.text);
+    return this.postService.sendReply(params.id, params.text);
   }
 
   /**
@@ -372,6 +374,32 @@ export class RedditService {
       // If we can't fetch flairs (e.g., no permission, subreddit doesn't exist), return empty array
       console.warn(`Failed to fetch flairs for subreddit ${subreddit}:`, error);
       return [];
+    }
+  }
+
+  public async sendComment(params: RedditCommentParams): Promise<RedditCommentResponse> {
+    try {
+      const { id, text, sendreplies = true } = params;
+
+      if (!id) {
+        throw new RedditError("id is required for sending comments", "VALIDATION_ERROR");
+      }
+
+      if (!text) {
+        throw new RedditError("text is required for sending comments", "VALIDATION_ERROR");
+      }
+
+      // Validate ID format
+      if (!/^t[1|3]_[a-z0-9]+$/.test(id)) {
+        throw new RedditError(
+          "Invalid ID format. Must start with t1_ for comments or t3_ for posts",
+          "VALIDATION_ERROR",
+        );
+      }
+
+      return this.postService.sendComment(params.id, params.text);
+    } catch (error) {
+      throw error;
     }
   }
 

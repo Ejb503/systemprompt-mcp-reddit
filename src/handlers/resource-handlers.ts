@@ -6,26 +6,18 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { SystemPromptService } from "../services/systemprompt-service.js";
 import { SystempromptBlockResponse } from "@/types/systemprompt.js";
-import {
-  ACTIONS,
-  getAvailableActions,
-  getRedditSchemas,
-  createResourceMetadata,
-} from "./action-schema.js";
-
-const PREFIX_SATISFIES_MAP = {
-  reddit_instructions: [ACTIONS.CONFIGURE_INSTRUCTIONS],
-  reddit_post: [ACTIONS.CREATE_POST],
-  reddit_reply: [ACTIONS.CREATE_REPLY],
-};
+import { getAvailableActions, getRedditSchemas } from "./action-schema.js";
 
 function getResourceType(prefix: string): string {
   switch (prefix) {
     case "reddit_post":
     case "reddit_reply":
+    case "reddit_comment":
       return "SendReddit";
     case "reddit_instructions":
-      return "EditContent";
+      return "Configuration";
+    case "reddit_subreddit_analysis":
+      return "SummarizeContent";
     default:
       return "SummarizeContent";
   }
@@ -41,14 +33,6 @@ export async function handleListResources(
   });
 
   const resources = blocks.map((block: SystempromptBlockResponse) => {
-    let initialData = undefined;
-    if (block.prefix === "reddit_post" || block.prefix === "reddit_reply") {
-      try {
-        initialData = JSON.parse(block.content);
-      } catch (error) {
-        initialData = { content: block.content };
-      }
-    }
     return {
       uri: `resource:///block/${block.id}`,
       name: block.prefix,
@@ -56,8 +40,11 @@ export async function handleListResources(
         actions: getAvailableActions(block.prefix),
         schema: getRedditSchemas(block.prefix),
         server_id: "5bd646cc-f499-4a37-9ebd-0fae39037bd8",
-        ...(initialData && { initialData }),
         type: getResourceType(block.prefix),
+        title: block.metadata.title,
+        description: block.metadata.description,
+        initialData: JSON.parse(block.content),
+        uuid: block.id,
       },
     };
   });
@@ -82,9 +69,12 @@ export async function handleResourceCall(
 
   try {
     const block = await systemPromptService.getBlock(blockId);
-    const satisfies = PREFIX_SATISFIES_MAP[block.prefix as keyof typeof PREFIX_SATISFIES_MAP] || [];
     let initialData = undefined;
-    if (block.prefix === "reddit_post" || block.prefix === "reddit_reply") {
+    if (
+      block.prefix === "reddit_post" ||
+      block.prefix === "reddit_reply" ||
+      block.prefix === "reddit_comment"
+    ) {
       try {
         initialData = JSON.parse(block.content);
       } catch (error) {
@@ -102,12 +92,14 @@ export async function handleResourceCall(
         },
       ],
       _meta: {
-        ...createResourceMetadata(block),
-        availableActions: getAvailableActions(block.prefix),
+        actions: getAvailableActions(block.prefix),
         schema: getRedditSchemas(block.prefix),
         server_id: "5bd646cc-f499-4a37-9ebd-0fae39037bd8",
-        satisfies,
-        ...(initialData && { initialData }),
+        type: getResourceType(block.prefix),
+        title: block.metadata.title,
+        description: block.metadata.description,
+        initialData: JSON.parse(block.content),
+        uuid: block.id,
       },
     };
   } catch (error) {

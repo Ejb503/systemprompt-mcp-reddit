@@ -6,21 +6,16 @@ export const editContent: Tool = {
   inputSchema: {
     type: "object",
     properties: {
-      resourceId: {
+      id: {
         type: "string",
         description: "The ID of the resource to edit",
-      },
-      resourceType: {
-        type: "string",
-        enum: ["post", "reply", "comment", "block"],
-        description: "The type of resource being edited",
       },
       content: {
         type: "string",
         description: "The new content for the resource",
       },
     },
-    required: ["resourceId", "resourceType", "content"],
+    required: ["id", "content"],
   },
   _meta: {
     displayTitle: "Edit Content",

@@ -1,4 +1,4 @@
-import { ToolHandler, GetRedditNotificationsArgs, formatToolResponse } from "./types.js";
+import { ToolHandler, GetNotificationsArgs, formatToolResponse } from "./types.js";
 import { RedditError } from "@/types/reddit.js";
 import { getRedditNotificationsSuccessMessage } from "@/constants/tool/get-notifications.js";
 import { JSONSchema7 } from "json-schema";
@@ -38,47 +38,24 @@ const responseSchema: JSONSchema7 = {
   required: ["status", "message", "result"],
 };
 
-export const handleGetRedditNotifications: ToolHandler<GetRedditNotificationsArgs> = async (
+export const handleGetNotifications: ToolHandler<GetNotificationsArgs> = async (
   args,
   { redditService },
 ) => {
   try {
-    // Fetch notifications with the provided options
-    const notifications = await redditService.fetchNotifications({
-      filter: args.filter || "all",
-      limit: args.limit || 25,
-      markRead: args.markRead || false,
-      excludeIds: args.excludeIds,
-      excludeTypes: args.excludeTypes,
-      excludeSubreddits: args.excludeSubreddits,
-      after: args.after,
-      before: args.before,
-    });
-
-    // Format the notifications for better readability
-    const formattedNotifications = notifications.map((notification) => ({
-      ...notification,
-      formattedTime: new Date(notification.createdUtc * 1000).toISOString(),
-      // Truncate very long bodies
-      body:
-        notification.body.length > 500
-          ? `${notification.body.substring(0, 500)}... (truncated)`
-          : notification.body,
-    }));
+    const notifications = await redditService.fetchNotifications(args);
 
     return formatToolResponse({
-      message: getRedditNotificationsSuccessMessage,
-      result: {
-        notifications: formattedNotifications,
-      },
+      message: `Found ${notifications.length} notifications`,
+      result: { notifications },
       schema: responseSchema,
       type: "server",
-      title: "Reddit Notifications",
+      title: "Get Notifications",
     });
   } catch (error) {
     return formatToolResponse({
       status: "error",
-      message: `Failed to fetch Reddit notifications: ${error instanceof Error ? error.message : "Unknown error"}`,
+      message: `Failed to fetch notifications: ${error instanceof Error ? error.message : "Unknown error"}`,
       error: {
         type: error instanceof RedditError ? error.type : "API_ERROR",
         details: error,

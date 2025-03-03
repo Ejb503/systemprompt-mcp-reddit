@@ -167,8 +167,8 @@ export const transformNotification = (data: Record<string, unknown>): ApiRedditN
 
   // For comment replies, we need to check link_title to determine if it's a post or comment reply
   if (data.was_comment) {
-    const parentId = String(data.parent_id || "");
-    if (parentId.startsWith("t3_")) {
+    const id = String(data.parent_id || "");
+    if (id.startsWith("t3_")) {
       type = "post_reply";
       // For post replies, use the post title as subject
       subject = String(data.link_title || "Comment on your post");
@@ -211,7 +211,7 @@ export function transformToConfigNotification(
     id: notification.id,
     type: notification.type,
     subject: notification.subject,
-    parent_id: notification.parentId || "",
+    parent_id: notification.id || "",
     subreddit: notification.subreddit || "",
     author: notification.author,
     body: notification.body || "",

@@ -28,23 +28,23 @@ export const REDDIT_POST_RESPONSE_SCHEMA: JSONSchema7 = {
   required: ["title", "content", "kind", "subreddit"],
 };
 
-export const REDDIT_REPLY_RESPONSE_SCHEMA: JSONSchema7 = {
+export const REDDIT_COMMENT_RESPONSE_SCHEMA: JSONSchema7 = {
   type: "object",
   properties: {
     content: {
       type: "string",
       description: "Generated content for the reply",
     },
-    subreddit: {
-      type: "string",
-      description: "Subreddit context",
-    },
-    parentId: {
+    id: {
       type: "string",
       description: "ID of parent post/comment being replied to",
     },
+    subreddit: {
+      type: "string",
+      description: "Subreddit where the comment will be posted",
+    },
   },
-  required: ["content", "subreddit", "parentId"],
+  required: ["content", "id", "subreddit"],
 };
 
 export const REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA: JSONSchema7 = {
@@ -66,7 +66,7 @@ export const REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA: JSONSchema7 = {
       type: "string",
       description: "Suggested content or topic for the action",
     },
-    parentId: {
+    id: {
       type: "string",
       description: "ID of parent post/comment to reply to (if action is 'reply')",
     },

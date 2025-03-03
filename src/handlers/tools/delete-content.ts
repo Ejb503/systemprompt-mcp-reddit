@@ -6,15 +6,15 @@ export const handleDeleteContent: ToolHandler<DeleteContentArgs> = async (
   { systemPromptService },
 ) => {
   try {
-    await systemPromptService.deleteBlock(args.resourceId);
+    await systemPromptService.deleteBlock(args.id);
     return formatToolResponse({
-      message: `Successfully deleted content for ${args.resourceId}`,
+      message: `Successfully deleted content for ${args.id}`,
       type: "api",
       title: "Delete Content",
     });
   } catch (error) {
     throw new RedditError(
-      `Failed to delete content for ${args.resourceId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to delete content for ${args.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
       "API_ERROR",
     );
   }

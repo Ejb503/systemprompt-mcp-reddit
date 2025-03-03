@@ -11,8 +11,12 @@ export const getPosts: Tool = {
         enum: ["hot", "new", "controversial"],
         description: "How to sort the posts",
       },
+      subreddit: {
+        type: "string",
+        description: "The subreddit to fetch posts from",
+      },
     },
-    required: ["sort"],
+    required: ["sort", "subreddit"],
   },
   _meta: {
     hidden: true,

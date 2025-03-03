@@ -46,8 +46,8 @@ const responseSchema: JSONSchema7 = {
 };
 
 export const handleSendPost: ToolHandler<SendPostArgs> = async (args, { redditService }) => {
-  if (!args.parentId) {
-    throw new RedditError("parentId is required for sending posts", "VALIDATION_ERROR");
+  if (!args.id) {
+    throw new RedditError("id is required for sending posts", "VALIDATION_ERROR");
   }
 
   try {

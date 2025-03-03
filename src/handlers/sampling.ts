@@ -4,7 +4,7 @@ import { server } from "../server.js";
 import { sendOperationNotification } from "./notifications.js";
 import {
   handleCreateRedditPostCallback,
-  handleCreateRedditReplyCallback,
+  handleCreateRedditCommentCallback,
   handleSuggestActionCallback,
   handleAnalyseSubredditCallback,
 } from "./callbacks.js";
@@ -42,8 +42,8 @@ async function handleCallback(callback: string, result: CreateMessageResult): Pr
       case "create_post_callback":
         await handleCreateRedditPostCallback(result);
         break;
-      case "create_reply_callback":
-        await handleCreateRedditReplyCallback(result);
+      case "create_comment_callback":
+        await handleCreateRedditCommentCallback(result);
         break;
       case "suggest_action":
         await handleSuggestActionCallback(result);

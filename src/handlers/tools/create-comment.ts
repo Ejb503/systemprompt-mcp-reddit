@@ -1,11 +1,11 @@
-import { ToolHandler, CreateRedditReplyArgs, formatToolResponse } from "./types.js";
+import { ToolHandler, CreateRedditCommentArgs, formatToolResponse } from "./types.js";
 import { RedditError } from "@/types/reddit.js";
 import { sendSamplingRequest } from "@/handlers/sampling.js";
 import { handleGetPrompt } from "@/handlers/prompt-handlers.js";
 import { injectVariables } from "@/utils/message-handlers.js";
 import { TOOL_ERROR_MESSAGES } from "@/constants/tools.js";
-import { CREATE_REDDIT_REPLY_PROMPT } from "@/constants/sampling/index.js";
-import { createRedditReplySuccessMessage } from "@/constants/tool/create-reply.js";
+import { CREATE_REDDIT_COMMENT_PROMPT } from "@/constants/sampling/index.js";
+import { createRedditCommentSuccessMessage } from "@/constants/tool/create-comment.js";
 import { JSONSchema7 } from "json-schema";
 
 const responseSchema: JSONSchema7 = {
@@ -17,11 +17,11 @@ const responseSchema: JSONSchema7 = {
       type: "object",
       properties: {
         status: { type: "string", enum: ["pending"] },
-        parentId: { type: "string" },
+        id: { type: "string" },
         reply: {
           type: "object",
           properties: {
-            parentId: {
+            id: {
               type: "string",
               description:
                 "The ID of the parent post or comment to reply to (must start with t1_ for comments or t3_ for posts)",
@@ -38,16 +38,16 @@ const responseSchema: JSONSchema7 = {
               default: true,
             },
           },
-          required: ["parentId", "text"],
+          required: ["id", "text"],
         },
       },
-      required: ["status", "parentId", "reply"],
+      required: ["status", "id", "reply"],
     },
   },
   required: ["status", "message", "result"],
 };
 
-export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async (
+export const handleCreateRedditComment: ToolHandler<CreateRedditCommentArgs> = async (
   args,
   { systemPromptService, redditService },
 ) => {
@@ -67,7 +67,7 @@ export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
       type: "reply",
-      parentId: args.parentId,
+      id: args.id,
       redditInstructions: instructionsBlock.content,
       redditConfig: JSON.stringify({
         allowedPostTypes: subredditInfo.allowedPostTypes,
@@ -81,7 +81,7 @@ export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async
     const prompt = await handleGetPrompt({
       method: "prompts/get",
       params: {
-        name: CREATE_REDDIT_REPLY_PROMPT.name,
+        name: CREATE_REDDIT_COMMENT_PROMPT.name,
         arguments: stringArgs,
       },
     });
@@ -94,7 +94,7 @@ export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async
     await sendSamplingRequest({
       method: "sampling/createMessage",
       params: {
-        messages: CREATE_REDDIT_REPLY_PROMPT.messages.map((msg) =>
+        messages: CREATE_REDDIT_COMMENT_PROMPT.messages.map((msg) =>
           injectVariables(msg, stringArgs),
         ) as Array<{
           role: "user" | "assistant";
@@ -103,7 +103,7 @@ export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async
         maxTokens: 100000,
         temperature: 0.7,
         _meta: {
-          callback: "create_reply_callback",
+          callback: "create_comment_callback",
           responseSchema: promptResponseSchema,
         },
         arguments: stringArgs,
@@ -111,10 +111,10 @@ export const handleCreateRedditReply: ToolHandler<CreateRedditReplyArgs> = async
     });
 
     return formatToolResponse({
-      message: createRedditReplySuccessMessage,
+      message: createRedditCommentSuccessMessage,
       result: {
         status: "pending",
-        parentId: args.parentId,
+        id: args.id,
       },
       schema: responseSchema,
       type: "sampling",

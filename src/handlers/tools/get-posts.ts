@@ -44,7 +44,7 @@ export const handleGetChannelPosts: ToolHandler<GetChannelPostsArgs> = async (
   try {
     const posts = await redditService.fetchPosts({
       sort: args.sort,
-      subreddits: [args.subreddit],
+      subreddit: args.subreddit,
     });
 
     return formatToolResponse({

@@ -1,6 +1,6 @@
 import { ToolHandler, GetPostArgs, formatToolResponse } from "./types.js";
 import { RedditError } from "@/types/reddit.js";
-import { fetchPostSuccessMessage as getPostSuccessMessage } from "@/constants/tool/fetch-post.js";
+import { getPostSuccessMessage } from "@/constants/tool/get-post.js";
 import { JSONSchema7 } from "json-schema";
 
 const commentSchema: JSONSchema7 = {
@@ -79,13 +79,13 @@ const responseSchema: JSONSchema7 = {
 
 export const handleGetPost: ToolHandler<GetPostArgs> = async (args, { redditService }) => {
   try {
-    const { postId } = args;
+    const { id } = args;
 
-    if (!postId) {
-      throw new RedditError("postId is required for fetching posts", "VALIDATION_ERROR");
+    if (!id) {
+      throw new RedditError("id is required for fetching posts", "VALIDATION_ERROR");
     }
 
-    const postWithComments = await redditService.fetchPostById(postId);
+    const postWithComments = await redditService.fetchPostById(id);
     const formattedPost = {
       ...postWithComments,
       comments: formatCommentsForDisplay(postWithComments.comments),

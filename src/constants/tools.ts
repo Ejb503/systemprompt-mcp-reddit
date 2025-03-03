@@ -2,13 +2,13 @@ import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { analyseSubreddit } from "@/constants/tool/analyse-subreddit.js";
 import { configureInstructions } from "@/constants/tool/configure-instructions.js";
 import { createPost } from "@/constants/tool/create-post.js";
-import { createReply } from "@/constants/tool/create-reply.js";
-import { fetchPost } from "@/constants/tool/fetch-post.js";
-import { getRedditNotifications } from "@/constants/tool/get-notifications.js";
+import { createComment } from "@/constants/tool/create-comment.js";
+import { getPost } from "@/constants/tool/get-post.js";
+import { getNotifications } from "@/constants/tool/get-notifications.js";
 import { getPosts } from "@/constants/tool/get-posts.js";
 import { sendRedditPost } from "@/constants/tool/send-post.js";
 import { searchReddit } from "@/constants/tool/search-reddit.js";
-import { sendReply } from "@/constants/tool/send-reply.js";
+import { sendComment } from "@/constants/tool/send-comment.js";
 import { getComment } from "@/constants/tool/get-comment.js";
 import { deleteContent } from "@/constants/tool/delete-content.js";
 import { editContent } from "@/constants/tool/edit-content.js";
@@ -25,15 +25,15 @@ export const TOOL_RESPONSE_MESSAGES = {
 
 export const TOOLS: Tool[] = [
   getPosts,
-  fetchPost,
-  getRedditNotifications,
+  getPost,
+  getNotifications,
   analyseSubreddit,
   createPost,
-  createReply,
+  createComment,
   sendRedditPost,
   configureInstructions,
   searchReddit,
-  sendReply,
+  sendComment,
   getComment,
   deleteContent,
   editContent,

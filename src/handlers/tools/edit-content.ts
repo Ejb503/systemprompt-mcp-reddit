@@ -10,16 +10,16 @@ export const handleEditContent: ToolHandler<EditContentArgs> = async (
     const block: Partial<SystempromptBlockRequest> = {
       content: args.content,
     };
-    await systemPromptService.updateBlock(args.resourceId, block);
+    await systemPromptService.updateBlock(args.id, block);
 
     return formatToolResponse({
-      message: `Notification: Successfully edited content for ${args.resourceId}`,
+      message: `Notification: Successfully edited content for ${args.id}`,
       type: "api",
       title: "Edit Content",
     });
   } catch (error) {
     throw new RedditError(
-      `Failed to edit content for ${args.resourceId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to edit content for ${args.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
       "API_ERROR",
     );
   }

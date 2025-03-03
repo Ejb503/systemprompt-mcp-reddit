@@ -1,17 +1,12 @@
 import { SamplingPrompt } from "@/types/sampling.js";
-import { REDDIT_REPLY_RESPONSE_SCHEMA } from "@/types/sampling-schemas.js";
+import { REDDIT_COMMENT_RESPONSE_SCHEMA } from "@/types/sampling-schemas.js";
 
-export const CREATE_REDDIT_REPLY_PROMPT: SamplingPrompt = {
-  name: "reddit_create_reply",
+export const CREATE_REDDIT_COMMENT_PROMPT: SamplingPrompt = {
+  name: "reddit_create_comment",
   description: "Creates thoughtful, contextual Reddit replies",
   arguments: [
     {
-      name: "subreddit",
-      description: "Subreddit context",
-      required: true,
-    },
-    {
-      name: "parentId",
+      name: "id",
       description: "ID of message to reply to",
       required: true,
     },
@@ -49,8 +44,7 @@ export const CREATE_REDDIT_REPLY_PROMPT: SamplingPrompt = {
         type: "text",
         text: `Create a Reddit reply with these parameters:
 
-Subreddit: {{subreddit}}
-Replying to: {{parentId}}
+Replying to: {{id}}
 
 Content Instructions: {{content}}
 
@@ -65,7 +59,7 @@ Ensure the reply:
     },
   ],
   _meta: {
-    callback: "create_reply_callback",
-    responseSchema: REDDIT_REPLY_RESPONSE_SCHEMA,
+    callback: "create_comment_callback",
+    responseSchema: REDDIT_COMMENT_RESPONSE_SCHEMA,
   },
 };

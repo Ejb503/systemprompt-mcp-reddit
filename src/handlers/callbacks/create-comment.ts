@@ -5,11 +5,11 @@ import { sendSamplingCompleteNotification, updateBlocks } from "../notifications
 import { formatToolResponse } from "../tools/types.js";
 import { JSONSchema7 } from "json-schema";
 
-// LLM-generated reply content (different from API response)
-export interface GeneratedRedditReply {
+// LLM-generated comment content (different from API response)
+export interface GeneratedRedditComment {
   content: string;
+  id: string;
   subreddit: string;
-  parentId: string;
   [key: string]: unknown;
 }
 
@@ -44,7 +44,9 @@ function isTextContent(content: unknown): content is { type: "text"; text: strin
   );
 }
 
-export async function handleCreateRedditReplyCallback(result: CreateMessageResult): Promise<void> {
+export async function handleCreateRedditCommentCallback(
+  result: CreateMessageResult,
+): Promise<void> {
   const systemPromptService = SystemPromptService.getInstance();
 
   try {
@@ -52,34 +54,32 @@ export async function handleCreateRedditReplyCallback(result: CreateMessageResul
       throw new Error("Invalid content format received from LLM");
     }
 
-    const replyData = JSON.parse(result.content.text) as GeneratedRedditReply;
+    const commentData = JSON.parse(result.content.text) as GeneratedRedditComment;
 
-    if (!replyData.content || !replyData.subreddit || !replyData.parentId) {
-      throw new Error(
-        "Invalid reply data: missing required fields (content, subreddit, or parentId)",
-      );
+    if (!commentData.content || !commentData.id || !commentData.subreddit) {
+      throw new Error("Invalid comment data: missing required fields (content, id, or subreddit)");
     }
 
-    const replyBlock: SystempromptBlockRequest = {
-      content: JSON.stringify(replyData),
+    const commentBlock: SystempromptBlockRequest = {
+      content: JSON.stringify(commentData),
       type: "block",
-      prefix: "reddit_reply",
+      prefix: "reddit_comment",
       metadata: {
-        title: `Reddit Reply in r/${replyData.subreddit}`,
-        description: `Generated Reddit reply content for parent ${replyData.parentId} in r/${replyData.subreddit}`,
+        title: `Reddit Comment in r/${commentData.subreddit}`,
+        description: `Generated Reddit comment content for parent ${commentData.id} in r/${commentData.subreddit}`,
         tag: ["mcp_systemprompt_reddit"],
       },
     };
 
-    const savedBlock = await systemPromptService.createBlock(replyBlock);
-    const message = `Reddit reply created for parent ${replyData.parentId} in r/${replyData.subreddit}. Please read it to the user`;
+    const savedBlock = await systemPromptService.createBlock(commentBlock);
+    const message = `Reddit comment created for parent ${commentData.id} in r/${commentData.subreddit}. Please read it to the user`;
 
     const notificationResponse = formatToolResponse({
       message: message,
       result: savedBlock,
       schema: blockSchema,
       type: "sampling",
-      title: "Create Reddit Reply Callback",
+      title: "Create Reddit Comment Callback",
     });
 
     await sendSamplingCompleteNotification(JSON.stringify(notificationResponse));
