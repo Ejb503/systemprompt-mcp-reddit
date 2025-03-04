@@ -12,6 +12,8 @@ import { sendComment } from "@/constants/tool/send-comment.js";
 import { getComment } from "@/constants/tool/get-comment.js";
 import { deleteContent } from "@/constants/tool/delete-content.js";
 import { editContent } from "@/constants/tool/edit-content.js";
+import { createMessage } from "@/constants/tool/create-message.js";
+import { sendMessage } from "@/constants/tool/send-message.js";
 import { RedditConfigData } from "@/types/config.js";
 
 export const TOOL_ERROR_MESSAGES = {
@@ -37,6 +39,8 @@ export const TOOLS: Tool[] = [
   getComment,
   deleteContent,
   editContent,
+  createMessage,
+  sendMessage,
 ];
 
 export function populateToolsInitialData(tools: Tool[], configData: RedditConfigData): Tool[] {

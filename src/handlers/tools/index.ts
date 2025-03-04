@@ -31,6 +31,7 @@ export type {
   RedditPreferences,
   RedditSubredditConfig,
   FetchRedditContentArgs,
+  SendMessageArgs,
 } from "./types.js";
 
 export { handleConfigureInstructions } from "./configure-instructions.js";

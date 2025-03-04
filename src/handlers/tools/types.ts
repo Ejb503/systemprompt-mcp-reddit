@@ -191,3 +191,21 @@ export interface SendCommentArgs {
   /** Whether to send replies to inbox */
   sendreplies?: boolean;
 }
+
+export interface CreateRedditMessageArgs {
+  /** The username of the recipient */
+  recipient: string;
+  /** The subject of the message */
+  subject: string;
+  /** The content of the message */
+  content: string;
+}
+
+export interface SendMessageArgs {
+  /** Username of the recipient */
+  recipient: string;
+  /** Subject line of the message (1-100 chars) */
+  subject: string;
+  /** Message content in markdown format (max 10000 chars) */
+  content: string;
+}

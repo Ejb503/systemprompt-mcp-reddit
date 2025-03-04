@@ -63,6 +63,28 @@ export const REDDIT_COMMENT_RESPONSE_SCHEMA: JSONSchema7 = {
   required: ["content", "id", "subreddit"],
 };
 
+export const REDDIT_MESSAGE_RESPONSE_SCHEMA: JSONSchema7 = {
+  type: "object",
+  properties: {
+    recipient: {
+      type: "string",
+      description: "Username of the message recipient",
+    },
+    subject: {
+      type: "string",
+      description: "Subject line of the message (1-100 chars)",
+      minLength: 1,
+      maxLength: 100,
+    },
+    content: {
+      type: "string",
+      description: "Message content in markdown format (max 10000 chars)",
+      maxLength: 10000,
+    },
+  },
+  required: ["recipient", "subject", "content"],
+};
+
 export const REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA: JSONSchema7 = {
   type: "object",
   properties: {
@@ -133,4 +155,15 @@ export const REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA: JSONSchema7 = {
     },
   },
   required: ["subreddit", "summary", "trendingTopics", "sentiment", "recommendedActions"],
+};
+
+export const REDDIT_INSTRUCTIONS_RESPONSE_SCHEMA: JSONSchema7 = {
+  type: "object",
+  properties: {
+    content: {
+      type: "string",
+      description: "Instructions for content generation and interaction with Reddit",
+    },
+  },
+  required: ["content"],
 };

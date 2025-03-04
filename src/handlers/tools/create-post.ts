@@ -159,22 +159,8 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
 
     return formatToolResponse({
       message: createRedditPostSuccessMessage,
-      result: {
-        status: "pending",
-        subreddit: args.subreddit,
-        post: {
-          subreddit: args.subreddit,
-          title: "", // Will be filled by sampling service
-          content: "", // Will be filled by sampling service
-          sendreplies: true,
-          nsfw: false,
-          spoiler: false,
-        },
-        availableFlairs: flairs,
-      },
-      schema: responseSchema,
       type: "sampling",
-      title: "Create Reddit Post",
+      title: "Create Reddit Message",
     });
   } catch (error) {
     return formatToolResponse({

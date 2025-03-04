@@ -37,7 +37,11 @@ import {
   GetCommentArgs,
   DeleteContentArgs,
   EditContentArgs,
+  CreateRedditMessageArgs,
+  SendMessageArgs,
 } from "./tools/index.js";
+import { handleCreateRedditMessage } from "./tools/create-message.js";
+import { handleSendMessage } from "./tools/send-message.js";
 
 type ToolArgs = {
   configure_instructions: ConfigureInstructionsArgs;
@@ -47,12 +51,14 @@ type ToolArgs = {
   analyse_subreddit: AnalyseSubredditArgs;
   create_post: CreateRedditPostArgs;
   create_comment: CreateRedditCommentArgs;
+  create_message: CreateRedditMessageArgs;
   send_post: SendPostArgs;
   search_reddit: SearchRedditArgs;
   send_comment: SendCommentArgs;
   get_comment: GetCommentArgs;
   delete_content: DeleteContentArgs;
   edit_content: EditContentArgs;
+  send_message: SendMessageArgs;
 };
 
 export async function handleListTools(request: ListToolsRequest): Promise<ListToolsResult> {
@@ -93,6 +99,8 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
         return await handleCreateRedditPost(args as CreateRedditPostArgs, context);
       case "create_comment":
         return await handleCreateRedditComment(args as CreateRedditCommentArgs, context);
+      case "create_message":
+        return await handleCreateRedditMessage(args as CreateRedditMessageArgs, context);
       case "configure_instructions":
         return await handleConfigureInstructions(args as ConfigureInstructionsArgs, context);
       case "delete_content":
@@ -111,9 +119,10 @@ export async function handleToolCall(request: CallToolRequest): Promise<CallTool
         return await handleSendComment(args as SendCommentArgs, context);
       case "send_post":
         return await handleSendPost(args as SendPostArgs, context);
+      case "send_message":
+        return await handleSendMessage(args as SendMessageArgs, context);
       case "search_reddit":
         return await handleSearchReddit(args as SearchRedditArgs, context);
-
       default:
         throw new Error(`${TOOL_ERROR_MESSAGES.UNKNOWN_TOOL} ${request.params.name}`);
     }

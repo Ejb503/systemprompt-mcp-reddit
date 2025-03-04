@@ -303,6 +303,26 @@ export interface RedditCommentResponse {
   permalink: string;
 }
 
+export interface RedditMessageParams {
+  /** Username of the recipient */
+  recipient: string;
+  /** Subject line of the message (1-100 chars) */
+  subject: string;
+  /** Message content in markdown format (max 10000 chars) */
+  content: string;
+}
+
+export interface RedditMessageResponse {
+  /** Full message ID with t4_ prefix */
+  id: string;
+  /** Username of the recipient */
+  recipient: string;
+  /** Subject line of the message */
+  subject: string;
+  /** Content of the message */
+  body: string;
+}
+
 export interface RedditService {
   // Authentication
   initialize(): Promise<void>;

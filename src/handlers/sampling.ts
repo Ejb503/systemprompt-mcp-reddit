@@ -8,6 +8,7 @@ import {
   handleSuggestActionCallback,
   handleAnalyseSubredditCallback,
 } from "./callbacks.js";
+import { handleCreateRedditMessageCallback } from "./callbacks/create-message.js";
 
 export async function sendSamplingRequest(
   request: CreateMessageRequest,
@@ -50,6 +51,9 @@ async function handleCallback(callback: string, result: CreateMessageResult): Pr
         break;
       case "analyse_subreddit_callback":
         await handleAnalyseSubredditCallback(result);
+        break;
+      case "create_message_callback":
+        await handleCreateRedditMessageCallback(result);
         break;
       default:
         throw new Error(`Unknown callback type: ${callback}`);

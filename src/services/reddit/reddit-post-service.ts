@@ -1,5 +1,5 @@
 import { RedditAuthService } from "./reddit-auth-service.js";
-import { RedditError } from "@/types/reddit.js";
+import { RedditError, RedditMessageParams, RedditMessageResponse } from "@/types/reddit.js";
 import {
   RedditPost,
   RedditPostParams,
@@ -428,6 +428,74 @@ export class RedditPostService extends RedditFetchService {
       };
     } catch (error) {
       throw error;
+    }
+  }
+
+  public async sendMessage(params: RedditMessageParams): Promise<RedditMessageResponse> {
+    try {
+      const { recipient, subject, content } = params;
+
+      if (!recipient) {
+        throw new RedditError("Recipient is required", "VALIDATION_ERROR");
+      }
+
+      // Remove any prefix (u/, /u/, etc) and trim whitespace
+      const cleanRecipient = recipient.replace(/^(?:u\/|\/u\/)/i, "").trim();
+
+      if (!cleanRecipient) {
+        throw new RedditError("Invalid recipient username", "VALIDATION_ERROR");
+      }
+
+      // Create form data with proper encoding
+      const formData = new URLSearchParams();
+      formData.append("api_type", "json");
+      formData.append("subject", subject.slice(0, 100));
+      formData.append("text", content);
+      formData.append("to", cleanRecipient);
+
+      const response = await this.redditFetch<{
+        json: {
+          errors: Array<[string, string, string]>; // Reddit returns errors as [name, message, field]
+          data?: {
+            things: Array<{
+              data: {
+                id: string;
+                name: string;
+              };
+            }>;
+          };
+        };
+      }>("/api/compose", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData.toString(),
+      });
+      // Check for errors in the response
+      if (response.json?.errors && response.json.errors.length > 0) {
+        const errorMessages = response.json.errors.map(([, message]) => message).join(", ");
+        throw new RedditError(`Reddit API Error: ${errorMessages}`, "API_ERROR");
+      }
+
+      // Generate a unique ID for the message since Reddit doesn't return one in a consistent format
+      const messageId = `t4_${Date.now().toString(36)}`;
+
+      return {
+        id: messageId,
+        recipient: cleanRecipient,
+        subject,
+        body: content,
+      };
+    } catch (error) {
+      if (error instanceof RedditError) {
+        throw error;
+      }
+      throw new RedditError(
+        `Failed to send message: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "API_ERROR",
+        error,
+      );
     }
   }
 }

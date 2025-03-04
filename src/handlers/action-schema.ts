@@ -4,6 +4,8 @@ import {
   REDDIT_POST_RESPONSE_SCHEMA,
   REDDIT_COMMENT_RESPONSE_SCHEMA,
   REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA,
+  REDDIT_MESSAGE_RESPONSE_SCHEMA,
+  REDDIT_INSTRUCTIONS_RESPONSE_SCHEMA,
 } from "@/types/sampling-schemas.js";
 
 // Constants for resource types and actions
@@ -12,15 +14,18 @@ export const RESOURCE_TYPES = {
   COMMENT: "reddit_comment",
   INSTRUCTIONS: "reddit_instructions",
   ANALYSIS: "reddit_subreddit_analysis",
+  MESSAGE: "reddit_message",
 } as const;
 
 export const ACTIONS = {
   CREATE_REDDIT_POST: "create_reddit_post",
   CREATE_REDDIT_COMMENT: "create_reddit_comment",
+  CREATE_REDDIT_MESSAGE: "create_reddit_message",
   DELETE_REDDIT_CONTENT: "delete_reddit_content",
   CONFIGURE_REDDIT_INSTRUCTIONS: "configure_reddit_instructions",
   SEND_REDDIT_POST: "send_reddit_post",
   SEND_REDDIT_COMMENT: "send_reddit_comment",
+  SEND_REDDIT_MESSAGE: "send_reddit_message",
   VIEW_REDDIT_ANALYSIS: "view_reddit_analysis",
 } as const;
 
@@ -41,16 +46,8 @@ const contentSchemas: Record<string, JSONSchema7> = {
   [RESOURCE_TYPES.POST]: REDDIT_POST_RESPONSE_SCHEMA,
   [RESOURCE_TYPES.COMMENT]: REDDIT_COMMENT_RESPONSE_SCHEMA,
   [RESOURCE_TYPES.ANALYSIS]: REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA,
-  [RESOURCE_TYPES.INSTRUCTIONS]: {
-    type: "object",
-    properties: {
-      content: {
-        type: "string",
-        description: "Instructions for content generation and interaction with Reddit",
-      },
-    },
-    required: ["content"],
-  },
+  [RESOURCE_TYPES.INSTRUCTIONS]: REDDIT_INSTRUCTIONS_RESPONSE_SCHEMA,
+  [RESOURCE_TYPES.MESSAGE]: REDDIT_MESSAGE_RESPONSE_SCHEMA,
 };
 
 // Shared schemas for Reddit actions
@@ -131,6 +128,19 @@ export const getRedditSchemas = (resourceType: string): Record<string, JSONSchem
     } as JSONSchema7;
   }
 
+  if (availableActions.includes(ACTIONS.CREATE_REDDIT_MESSAGE)) {
+    schemas[ACTIONS.CREATE_REDDIT_MESSAGE] = {
+      type: "object",
+      properties: {
+        recipient: { type: "string", description: "Username of the recipient" },
+        subject: { type: "string", description: "Subject of the message" },
+        content: { type: "string", description: "Content of the message" },
+      },
+      required: ["recipient", "subject", "content"],
+      additionalProperties: false,
+    } as JSONSchema7;
+  }
+
   return schemas;
 };
 
@@ -147,6 +157,8 @@ export const getAvailableActions = (resourceType: string): string[] => {
       return [ACTIONS.CONFIGURE_REDDIT_INSTRUCTIONS, ...baseActions];
     case RESOURCE_TYPES.ANALYSIS:
       return [ACTIONS.VIEW_REDDIT_ANALYSIS, ...baseActions];
+    case RESOURCE_TYPES.MESSAGE:
+      return [ACTIONS.SEND_REDDIT_MESSAGE, ...baseActions];
     default:
       return baseActions;
   }

@@ -51,6 +51,19 @@ export interface RedditCommentResponse {
   permalink: string;
 }
 
+export interface RedditMessageParams {
+  recipient: string;
+  subject: string;
+  content: string;
+}
+
+export interface RedditMessageResponse {
+  id: string;
+  recipient: string;
+  subject: string;
+  body: string;
+}
+
 /**
  * Main service for interacting with the Reddit API
  * Implements facade pattern to coordinate between specialized services
@@ -404,6 +417,38 @@ export class RedditService {
       }
 
       return this.postService.sendComment(params.id, params.text);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async sendMessage(params: RedditMessageParams): Promise<RedditMessageResponse> {
+    this.checkInitialized();
+
+    try {
+      const { recipient, subject, content } = params;
+
+      if (!recipient || !subject || !content) {
+        throw new RedditError("Missing required fields", "VALIDATION_ERROR");
+      }
+
+      // Validate subject length
+      if (subject.length > 100) {
+        throw new RedditError(
+          "Subject exceeds maximum length of 100 characters",
+          "VALIDATION_ERROR",
+        );
+      }
+
+      // Validate content length
+      if (content.length > 10000) {
+        throw new RedditError(
+          "Content exceeds maximum length of 10000 characters",
+          "VALIDATION_ERROR",
+        );
+      }
+
+      return this.postService.sendMessage(params);
     } catch (error) {
       throw error;
     }
