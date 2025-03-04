@@ -46,6 +46,28 @@ export interface RedditNotification {
 }
 
 /**
+ * Represents a private message from Reddit
+ */
+export interface RedditMessage {
+  /** Full message ID with t4_ prefix */
+  id: string;
+  /** Type will always be "message" */
+  type: "message";
+  /** Subject line of the message */
+  subject: string;
+  /** ID of the message thread (usually same as message ID) */
+  parent_id: string;
+  /** Username of message sender */
+  author: string;
+  /** Content of the message */
+  body: string;
+  /** Unix timestamp when message was sent */
+  created_utc: number;
+  /** Whether the message has been read */
+  unread: boolean;
+}
+
+/**
  * Represents detailed information about a subreddit
  * This matches Reddit's GET /r/{subreddit}/about endpoint
  */
@@ -342,8 +364,10 @@ export interface SearchResults {
  * Contains the main data needed for the Reddit client
  */
 export interface RedditConfigData {
-  /** User's notifications/messages */
+  /** User's notifications (excluding private messages) */
   notifications: RedditNotification[];
+  /** User's private messages */
+  messages: RedditMessage[];
   /** List of subreddits the user is subscribed to */
   subscribedSubreddits: SubredditInfo[];
   /** Information about the current user */
@@ -354,28 +378,27 @@ export interface RedditConfigData {
 export const mockRedditConfig: RedditConfigData = {
   notifications: [
     {
-      id: "t4_notif123", // Notification ID
+      id: "t4_notif123",
       type: "comment_reply",
       created_utc: 1647532800,
       subreddit: "programming",
       subject: "Thanks for your helpful comment!",
       body: "Thanks for your helpful comment!",
       author: "user123",
-      parent_id: "t1_abc123", // Comment ID
+      parent_id: "t1_abc123",
       permalink: "/r/programming/comments/xyz789/t1_abc123",
       unread: true,
     },
+  ],
+  messages: [
     {
-      id: "t4_notif456", // Notification ID
-      type: "post_reply",
+      id: "t4_msg456",
+      type: "message",
+      subject: "Welcome to r/typescript!",
+      parent_id: "t4_msg456",
+      author: "typescript_bot",
+      body: "Welcome to our community! Please read the rules...",
       created_utc: 1647529200,
-      subreddit: "typescript",
-      title: "Question about interfaces",
-      subject: "Question about interfaces",
-      body: "This solved my problem, thank you!",
-      author: "typescript_fan",
-      parent_id: "t3_def456", // Post ID
-      permalink: "/r/typescript/comments/def456",
       unread: false,
     },
   ],

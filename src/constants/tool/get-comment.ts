@@ -20,7 +20,7 @@ export const getComment: Tool = {
   },
   _meta: {
     hidden: true,
-    displayTitle: "Get Comment",
+    title: "Get Comment",
     type: "server",
   },
 };

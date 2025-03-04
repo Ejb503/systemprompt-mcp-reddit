@@ -18,7 +18,7 @@ export const editContent: Tool = {
     required: ["id", "content"],
   },
   _meta: {
-    displayTitle: "Edit Content",
+    title: "Edit Content",
     type: "api",
     ignore: true,
     hidden: true,

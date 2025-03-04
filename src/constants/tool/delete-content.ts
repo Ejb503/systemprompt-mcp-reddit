@@ -14,7 +14,7 @@ export const deleteContent: Tool = {
     required: ["id"],
   },
   _meta: {
-    displayTitle: "Delete Content",
+    title: "Delete Content",
     type: "api",
     ignore: true,
     hidden: true,

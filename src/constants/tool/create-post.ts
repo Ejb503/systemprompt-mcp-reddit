@@ -21,7 +21,7 @@ export const createPost: Tool = {
   },
   _meta: {
     hidden: false,
-    displayTitle: "Create Post",
+    title: "Create Post",
     type: "api",
     callback: "create_post_callback",
   },

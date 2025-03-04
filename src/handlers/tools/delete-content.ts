@@ -1,3 +1,4 @@
+import { updateBlocks } from "../notifications.js";
 import { ToolHandler, DeleteContentArgs, formatToolResponse } from "./types.js";
 import { RedditError } from "@/types/reddit.js";
 
@@ -7,6 +8,7 @@ export const handleDeleteContent: ToolHandler<DeleteContentArgs> = async (
 ) => {
   try {
     await systemPromptService.deleteBlock(args.id);
+    updateBlocks();
     return formatToolResponse({
       message: `Successfully deleted content for ${args.id}`,
       type: "api",

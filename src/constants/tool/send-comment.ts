@@ -27,7 +27,7 @@ export const sendComment: Tool = {
   },
   _meta: {
     hidden: true,
-    displayTitle: "Send Comment",
+    title: "Send Comment",
     type: "server",
   },
 };

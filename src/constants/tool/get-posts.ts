@@ -21,7 +21,7 @@ export const getPosts: Tool = {
   _meta: {
     hidden: true,
     ignore: false,
-    displayTitle: "Get Posts",
+    title: "Get Posts",
     type: "sampling",
   },
 };

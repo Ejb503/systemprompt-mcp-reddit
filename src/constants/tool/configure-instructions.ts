@@ -15,7 +15,7 @@ export const configureInstructions: Tool = {
   },
   _meta: {
     hidden: false,
-    displayTitle: "Configure Instructions",
+    title: "Configure Instructions",
     type: "api",
   },
 };

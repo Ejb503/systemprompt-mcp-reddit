@@ -50,7 +50,7 @@ export const getNotifications: Tool = {
   _meta: {
     ignore: false,
     hidden: true,
-    displayTitle: "Get Notifications",
+    title: "Get Notifications",
     type: "server",
   },
 };

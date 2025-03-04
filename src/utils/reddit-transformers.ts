@@ -5,7 +5,10 @@ import {
   RedditNotification as ApiRedditNotification,
   SubscribedSubreddit,
 } from "@/types/reddit.js";
-import type { RedditNotification as ConfigRedditNotification } from "@/types/config.js";
+import type {
+  RedditNotification as ConfigRedditNotification,
+  RedditMessage,
+} from "@/types/config.js";
 
 /**
  * Type guards and transformation utilities for Reddit API responses
@@ -204,14 +207,40 @@ export const transformNotification = (data: Record<string, unknown>): ApiRedditN
   };
 };
 
+export const transformMessage = (data: Record<string, unknown>): RedditMessage => {
+  return {
+    id: String(data.name || ""),
+    type: "message",
+    subject: String(data.subject || ""),
+    parent_id: String(data.parent_id || data.name || ""),
+    author: String(data.author || "[deleted]"),
+    body: String(data.body || ""),
+    created_utc: Number(data.created_utc || 0),
+    unread: Boolean(data.new),
+  };
+};
+
 export function transformToConfigNotification(
   notification: ApiRedditNotification,
-): ConfigRedditNotification {
+): ConfigRedditNotification | RedditMessage {
+  if (notification.type === "message") {
+    return {
+      id: notification.id,
+      type: "message",
+      subject: notification.subject,
+      parent_id: notification.parentId || notification.id,
+      author: notification.author,
+      body: notification.body,
+      created_utc: notification.createdUtc,
+      unread: notification.isNew,
+    };
+  }
+
   return {
     id: notification.id,
     type: notification.type,
     subject: notification.subject,
-    parent_id: notification.id || "",
+    parent_id: notification.parentId || "",
     subreddit: notification.subreddit || "",
     author: notification.author,
     body: notification.body || "",

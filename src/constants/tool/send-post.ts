@@ -48,7 +48,7 @@ export const sendRedditPost: Tool = {
   },
   _meta: {
     hidden: true,
-    displayTitle: "Send Post",
+    title: "Send Post",
     type: "server",
   },
 };

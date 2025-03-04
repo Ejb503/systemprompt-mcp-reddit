@@ -37,7 +37,7 @@ export const searchReddit: Tool = {
     },
   },
   _meta: {
-    displayTitle: "Search Reddit",
+    title: "Search Reddit",
     hidden: false,
     type: "server",
   },

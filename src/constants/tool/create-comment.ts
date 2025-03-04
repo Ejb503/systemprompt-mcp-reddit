@@ -26,7 +26,7 @@ export const createComment: Tool = {
   },
   _meta: {
     hidden: true,
-    displayTitle: "Create Comment",
+    title: "Create Comment",
     type: "api",
     callback: "create_comment_callback",
   },

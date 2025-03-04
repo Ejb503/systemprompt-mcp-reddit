@@ -15,7 +15,7 @@ export const getPost: Tool = {
   },
   _meta: {
     hidden: true,
-    displayTitle: "Get Post",
+    title: "Get Post",
     type: "server",
   },
 };

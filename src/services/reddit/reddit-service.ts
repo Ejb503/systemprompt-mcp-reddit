@@ -19,6 +19,7 @@ import {
 import type {
   RedditConfigData,
   RedditNotification as ConfigRedditNotification,
+  RedditMessage,
   SubredditInfo,
 } from "../../types/config.js";
 import { RedditAuthService } from "./reddit-auth-service.js";
@@ -222,7 +223,9 @@ export class RedditService {
   /**
    * Formats a notification for the config response
    */
-  private formatNotification(notification: ApiRedditNotification): ConfigRedditNotification {
+  private formatNotification(
+    notification: ApiRedditNotification,
+  ): ConfigRedditNotification | RedditMessage {
     return transformToConfigNotification(notification);
   }
 
@@ -257,16 +260,28 @@ export class RedditService {
 
     try {
       // Fetch all required data in parallel
-      const [notifications, subscribedSubreddits, userInfo, userPreferences] = await Promise.all([
-        this.fetchNotifications({ filter: "all", limit: 10, markRead: false }),
-        this.fetchSubscribedSubreddits({ limit: 50 }),
-        this.fetchUserInfo(),
-        this.fetchUserPreferences(),
-      ]);
+      const [allNotifications, subscribedSubreddits, userInfo, userPreferences] = await Promise.all(
+        [
+          this.fetchNotifications({ filter: "all", limit: 10, markRead: false }),
+          this.fetchSubscribedSubreddits({ limit: 50 }),
+          this.fetchUserInfo(),
+          this.fetchUserPreferences(),
+        ],
+      );
+
+      // Transform notifications and messages
+      const transformed = allNotifications.map((n) => this.formatNotification(n));
+
+      // Separate messages from notifications
+      const messages = transformed.filter((n): n is RedditMessage => n.type === "message");
+      const notifications = transformed.filter(
+        (n): n is ConfigRedditNotification => n.type !== "message",
+      );
 
       // Format the data according to our schema
       return {
-        notifications: notifications.map((n) => this.formatNotification(n)),
+        notifications,
+        messages,
         subscribedSubreddits: subscribedSubreddits.map(this.formatSubredditInfo),
         user: {
           ...userInfo,
