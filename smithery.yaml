@@ -1,0 +1,43 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - systempromptApiKey
+      - redditClientId
+      - redditClientSecret
+      - redditRefreshToken
+    properties:
+      systempromptApiKey:
+        type: string
+        description: Your Systemprompt API key to authenticate with Systemprompt service.
+      redditClientId:
+        type: string
+        description: Reddit client ID.
+      redditClientSecret:
+        type: string
+        description: Reddit client secret.
+      redditRefreshToken:
+        type: string
+        description: Reddit refresh token.
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['build/index.js'],
+      env: {
+        SYSTEMPROMPT_API_KEY: config.systempromptApiKey,
+        REDDIT_CLIENT_ID: config.redditClientId,
+        REDDIT_CLIENT_SECRET: config.redditClientSecret,
+        REDDIT_REFRESH_TOKEN: config.redditRefreshToken
+      }
+    })
+  exampleConfig:
+    systempromptApiKey: your-systemprompt-api-key-here
+    redditClientId: your-reddit-client-id-here
+    redditClientSecret: your-reddit-client-secret-here
+    redditRefreshToken: your-reddit-refresh-token-here
