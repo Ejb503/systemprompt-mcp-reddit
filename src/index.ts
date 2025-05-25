@@ -48,19 +48,7 @@ export async function main() {
   server.setRequestHandler(CreateMessageRequestSchema, sendSamplingRequest);
 
   const transport = new StdioServerTransport();
-
   await server.connect(transport);
-  const redditService = RedditService.getInstance();
-
-  try {
-    await redditService.initialize();
-    const configData = await redditService.getRedditConfig();
-    sendRedditConfigNotification(JSON.stringify(configData, null, 2));
-  } catch (error) {
-    throw new Error(
-      `Failed to connect to Reddit API: ${error instanceof Error ? error.message : error}`,
-    );
-  }
 }
 
 // Run the server unless in test environment
