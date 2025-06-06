@@ -5,6 +5,7 @@ import {
   ListToolsRequest,
   ListToolsResult,
 } from "@modelcontextprotocol/sdk/types.js";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { TOOLS } from "@/constants/tools.js";
 import { TOOL_ERROR_MESSAGES } from "@/constants/tools.js";
 import { SystemPromptService } from "@/services/systemprompt-service.js";
@@ -70,13 +71,36 @@ export async function handleListTools(request: ListToolsRequest): Promise<ListTo
   }
 }
 
-export async function handleToolCall(request: CallToolRequest): Promise<CallToolResult> {
-  const redditService = RedditService.getInstance();
+export async function handleToolCall(
+  request: CallToolRequest,
+  extra?: { authInfo?: AuthInfo },
+): Promise<CallToolResult> {
+  const authInfo = extra?.authInfo;
+  if (!authInfo?.extra?.redditAccessToken) {
+    throw new Error("Authentication required: Reddit access token not found");
+  }
+
+  // Create Reddit service with auth tokens from the request
+  const redditService = new RedditService({
+    accessToken: authInfo.extra.redditAccessToken as string,
+    refreshToken: authInfo.extra.redditRefreshToken as string,
+  });
+
   const systemPromptService = SystemPromptService.getInstance();
+
+  // Set SystemPrompt API key if provided in headers
+  if (authInfo?.extra?.systempromptApiKey) {
+    systemPromptService.setApiKey(authInfo.extra.systempromptApiKey as string);
+  }
+
+  // Check if SystemPrompt API key is available
+  const hasSystemPromptApiKey = !!authInfo?.extra?.systempromptApiKey;
 
   const context = {
     redditService,
     systemPromptService,
+    authInfo,
+    hasSystemPromptApiKey,
   };
 
   try {

@@ -14,6 +14,13 @@ export class RedditAuthService {
     await this.refreshAccessToken();
   }
 
+  public setAccessToken(token: string, expiresInSeconds?: number): void {
+    this.accessToken = token;
+    this.tokenExpiresAt = expiresInSeconds
+      ? Date.now() + expiresInSeconds * 1000
+      : Date.now() + 3600 * 1000; // Default to 1 hour
+  }
+
   public async getAuthHeaders(): Promise<HeadersInit> {
     const token = await this.getAccessToken();
     return {

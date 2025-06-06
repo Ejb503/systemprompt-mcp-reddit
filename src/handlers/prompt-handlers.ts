@@ -1,66 +1,57 @@
-import type {
-  GetPromptRequest,
-  GetPromptResult,
+import {
   ListPromptsRequest,
   ListPromptsResult,
+  GetPromptRequest,
+  GetPromptResult,
   PromptMessage,
 } from "@modelcontextprotocol/sdk/types.js";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { PROMPTS } from "@/constants/sampling/index.js";
-import { injectVariablesIntoText } from "@/utils/message-handlers.js";
 
-export async function handleListPrompts(request: ListPromptsRequest): Promise<ListPromptsResult> {
-  try {
-    if (!PROMPTS || !Array.isArray(PROMPTS)) {
-      throw new Error("Failed to fetch prompts");
-    }
-    return {
-      prompts: PROMPTS.map(({ messages, ...rest }) => rest),
-    };
-  } catch (error: any) {
-    throw error;
-  }
+export async function handleListPrompts(
+  request: ListPromptsRequest,
+  extra?: { authInfo?: AuthInfo },
+): Promise<ListPromptsResult> {
+  return { prompts: PROMPTS };
 }
 
-export async function handleGetPrompt(request: GetPromptRequest): Promise<GetPromptResult> {
-  try {
-    if (!PROMPTS || !Array.isArray(PROMPTS)) {
-      throw new Error("Failed to fetch prompts");
+export async function handleGetPrompt(
+  request: GetPromptRequest,
+  extra?: { authInfo?: AuthInfo },
+): Promise<GetPromptResult> {
+  const prompt = PROMPTS.find((p: any) => p.name === request.params.name);
+  if (!prompt) {
+    throw new Error(`Prompt not found: ${request.params.name}`);
+  }
+
+  // Replace variables in the prompt messages
+  const messages = prompt.messages.map((message: PromptMessage) => {
+    if (message.content.type !== "text") {
+      return message; // Return non-text content as-is
     }
 
-    const foundPrompt = PROMPTS.find((p) => p.name === request.params.name);
-    if (!foundPrompt) {
-      throw new Error(`Prompt not found: ${request.params.name}`);
-    }
+    let text = String(message.content.text);
 
-    if (
-      !foundPrompt.messages ||
-      !Array.isArray(foundPrompt.messages) ||
-      foundPrompt.messages.length === 0
-    ) {
-      throw new Error(`Messages not found for prompt: ${request.params.name}`);
+    // Replace variables with provided arguments
+    if (request.params.arguments) {
+      Object.entries(request.params.arguments).forEach(([key, value]) => {
+        const placeholder = `{{${key}}}`;
+        text = text.replace(new RegExp(placeholder, "g"), String(value));
+      });
     }
-
-    const injectedMessages = foundPrompt.messages.map((message: PromptMessage) => {
-      if (message.role === "user" && message.content.type === "text" && request.params.arguments) {
-        return {
-          role: message.role,
-          content: {
-            type: "text" as const,
-            text: injectVariablesIntoText(message.content.text, request.params.arguments),
-          },
-        } satisfies PromptMessage;
-      }
-      return message;
-    });
 
     return {
-      name: foundPrompt.name,
-      description: foundPrompt.description,
-      arguments: foundPrompt.arguments || [],
-      messages: injectedMessages,
-      _meta: foundPrompt._meta,
+      role: message.role,
+      content: {
+        type: "text" as const,
+        text: text,
+      },
     };
-  } catch (error: any) {
-    throw error;
-  }
+  });
+
+  return {
+    description: prompt.description,
+    messages: messages,
+    _meta: prompt._meta,
+  };
 }

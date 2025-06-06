@@ -94,14 +94,19 @@ const responseSchema: JSONSchema7 = {
 
 export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
   args,
-  { systemPromptService, redditService },
+  { systemPromptService, redditService, hasSystemPromptApiKey },
 ) => {
   try {
-    const configBlocks = await systemPromptService.listBlocks();
-    const instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
+    let instructionsBlock = null;
 
-    if (!instructionsBlock) {
-      throw new RedditError("Reddit configuration or instructions not found", "VALIDATION_ERROR");
+    // Try to get SystemPrompt instructions if API key is available
+    if (hasSystemPromptApiKey) {
+      try {
+        const configBlocks = await systemPromptService.listBlocks();
+        instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
+      } catch (error) {
+        console.warn("Failed to fetch SystemPrompt instructions, proceeding without them:", error);
+      }
     }
 
     // Fetch subreddit info including flairs
@@ -115,7 +120,7 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
       flairRequired: String(subredditInfo.flairRequired || false),
       availableFlairs: JSON.stringify(flairs),
       subredditRules: JSON.stringify(subredditInfo),
-      redditInstructions: instructionsBlock.content,
+      redditInstructions: instructionsBlock?.content || "No specific instructions configured",
       redditConfig: JSON.stringify({
         allowedPostTypes: subredditInfo.allowedPostTypes,
         rules: subredditInfo.rules,

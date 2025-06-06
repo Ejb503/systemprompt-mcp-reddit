@@ -9,14 +9,18 @@ import type {
 export class SystemPromptService {
   private static instance: SystemPromptService | null = null;
   private baseUrl: string;
+  private apiKey: string | null = null;
 
   private constructor() {
     this.baseUrl = "https://api.systemprompt.io/v1";
   }
 
-  public static initialize(): void {
+  public static initialize(apiKey?: string): void {
     if (!SystemPromptService.instance) {
       SystemPromptService.instance = new SystemPromptService();
+    }
+    if (apiKey) {
+      SystemPromptService.instance.apiKey = apiKey;
     }
   }
 
@@ -25,6 +29,10 @@ export class SystemPromptService {
       throw new Error("SystemPromptService must be initialized first");
     }
     return SystemPromptService.instance;
+  }
+
+  public setApiKey(apiKey: string): void {
+    this.apiKey = apiKey;
   }
 
   public static cleanup(): void {
@@ -38,12 +46,19 @@ export class SystemPromptService {
     headers?: Record<string, string>,
   ): Promise<T> {
     try {
+      const apiKey = this.apiKey || process.env.SYSTEMPROMPT_API_KEY;
+      if (!apiKey) {
+        throw new Error(
+          "SystemPrompt API key is required. Set it via setApiKey() or SYSTEMPROMPT_API_KEY environment variable.",
+        );
+      }
+
       const url = `${this.baseUrl}${path}`;
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          "api-key": process.env.SYSTEMPROMPT_API_KEY as string,
+          "api-key": apiKey,
           ...headers,
         },
         body: body ? JSON.stringify(body) : undefined,

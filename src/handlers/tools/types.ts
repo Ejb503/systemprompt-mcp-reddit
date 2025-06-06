@@ -1,4 +1,5 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { RedditService } from "../../services/reddit/reddit-service.js";
 import { SystemPromptService } from "../../services/systemprompt-service.js";
 import { RedditErrorType } from "@/types/reddit.js";
@@ -7,6 +8,8 @@ import { JSONSchema7 } from "json-schema";
 export interface ToolHandlerContext {
   redditService: RedditService;
   systemPromptService: SystemPromptService;
+  authInfo?: AuthInfo;
+  hasSystemPromptApiKey: boolean;
 }
 
 export type ToolHandler<T = any> = (

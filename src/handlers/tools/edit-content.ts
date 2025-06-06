@@ -4,9 +4,15 @@ import { SystempromptBlockRequest } from "@/types/systemprompt.js";
 
 export const handleEditContent: ToolHandler<EditContentArgs> = async (
   args,
-  { systemPromptService },
+  { systemPromptService, hasSystemPromptApiKey },
 ) => {
   try {
+    if (!hasSystemPromptApiKey) {
+      throw new RedditError(
+        "SystemPrompt API key is required to edit content. Please provide X-SystemPrompt-API-Key header.",
+        "API_ERROR",
+      );
+    }
     const block: Partial<SystempromptBlockRequest> = {
       content: args.content,
     };

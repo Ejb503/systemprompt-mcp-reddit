@@ -49,15 +49,19 @@ const responseSchema: JSONSchema7 = {
 
 export const handleCreateRedditComment: ToolHandler<CreateRedditCommentArgs> = async (
   args,
-  { systemPromptService, redditService },
+  { systemPromptService, redditService, hasSystemPromptApiKey },
 ) => {
   try {
-    // Fetch configurations
-    const configBlocks = await systemPromptService.listBlocks();
-    const instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
+    let instructionsBlock = null;
 
-    if (!instructionsBlock) {
-      throw new RedditError("Reddit configuration or instructions not found", "VALIDATION_ERROR");
+    // Try to get SystemPrompt instructions if API key is available
+    if (hasSystemPromptApiKey) {
+      try {
+        const configBlocks = await systemPromptService.listBlocks();
+        instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
+      } catch (error) {
+        console.warn("Failed to fetch SystemPrompt instructions, proceeding without them:", error);
+      }
     }
 
     // Fetch subreddit rules
@@ -68,7 +72,7 @@ export const handleCreateRedditComment: ToolHandler<CreateRedditCommentArgs> = a
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
       type: "reply",
       id: args.id,
-      redditInstructions: instructionsBlock.content,
+      redditInstructions: instructionsBlock?.content || "No specific instructions configured",
       redditConfig: JSON.stringify({
         allowedPostTypes: subredditInfo.allowedPostTypes,
         rules: subredditInfo.rules,

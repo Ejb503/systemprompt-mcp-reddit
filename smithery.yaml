@@ -3,32 +3,7 @@
 startCommand:
   type: stdio
   commandFunction:
-    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
     |-
-    (config) => ({ command: 'node', args: ['build/index.js'], env: { SYSTEMPROMPT_API_KEY: config.systempromptApiKey, REDDIT_CLIENT_ID: config.redditClientId, REDDIT_CLIENT_SECRET: config.redditClientSecret, REDDIT_REFRESH_TOKEN: config.redditRefreshToken } })
+    (config) => ({ command: 'node', args: ['build/index.js'] })
   configSchema:
-    # JSON Schema defining the configuration options for the MCP.
     type: object
-    required:
-      - systempromptApiKey
-      - redditClientId
-      - redditClientSecret
-      - redditRefreshToken
-    properties:
-      systempromptApiKey:
-        type: string
-        description: API key for systemprompt.io
-      redditClientId:
-        type: string
-        description: Reddit application client ID
-      redditClientSecret:
-        type: string
-        description: Reddit application client secret
-      redditRefreshToken:
-        type: string
-        description: Reddit refresh token for OAuth2
-  exampleConfig:
-    systempromptApiKey: abc123-systemprompt-key
-    redditClientId: my-reddit-client-id
-    redditClientSecret: my-reddit-client-secret
-    redditRefreshToken: my-reddit-refresh-token

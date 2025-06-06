@@ -4,9 +4,15 @@ import { RedditError } from "@/types/reddit.js";
 
 export const handleDeleteContent: ToolHandler<DeleteContentArgs> = async (
   args,
-  { systemPromptService },
+  { systemPromptService, hasSystemPromptApiKey },
 ) => {
   try {
+    if (!hasSystemPromptApiKey) {
+      throw new RedditError(
+        "SystemPrompt API key is required to delete content. Please provide X-SystemPrompt-API-Key header.",
+        "API_ERROR",
+      );
+    }
     await systemPromptService.deleteBlock(args.id);
     updateBlocks();
     return formatToolResponse({

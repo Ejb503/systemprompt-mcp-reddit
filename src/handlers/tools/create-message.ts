@@ -50,20 +50,25 @@ export const handleCreateRedditMessage: ToolHandler<{
   recipient: string;
   subject: string;
   content: string;
-}> = async (args, { systemPromptService }) => {
+}> = async (args, { systemPromptService, hasSystemPromptApiKey }) => {
   try {
-    const configBlocks = await systemPromptService.listBlocks();
-    const instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
+    let instructionsBlock = null;
 
-    if (!instructionsBlock) {
-      throw new RedditError("Reddit configuration or instructions not found", "VALIDATION_ERROR");
+    // Try to get SystemPrompt instructions if API key is available
+    if (hasSystemPromptApiKey) {
+      try {
+        const configBlocks = await systemPromptService.listBlocks();
+        instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
+      } catch (error) {
+        console.warn("Failed to fetch SystemPrompt instructions, proceeding without them:", error);
+      }
     }
 
     // Convert all values to strings and include configs
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
       type: "message",
-      redditInstructions: instructionsBlock.content,
+      redditInstructions: instructionsBlock?.content || "No specific instructions configured",
     };
 
     const prompt = await handleGetPrompt({

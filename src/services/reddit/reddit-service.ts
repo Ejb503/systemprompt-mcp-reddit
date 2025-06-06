@@ -78,11 +78,29 @@ export class RedditService {
   private postService: RedditPostService;
   private subredditService: RedditSubredditService;
 
-  private constructor() {
+  constructor(authTokens?: { accessToken: string; refreshToken: string }) {
     this.initialized = false;
 
-    const config = this.loadConfig();
-    this.authService = new RedditAuthService(config);
+    if (authTokens) {
+      // Create auth service with provided tokens
+      const config = {
+        clientId: process.env.REDDIT_CLIENT_ID ?? "",
+        clientSecret: process.env.REDDIT_CLIENT_SECRET ?? "",
+        refreshToken: authTokens.refreshToken,
+        appName: "Systemprompt MCP Reddit",
+        appVersion: "1.0.9",
+        username: "AutomatedBot",
+      };
+      this.authService = new RedditAuthService(config);
+      // Set the access token directly
+      this.authService.setAccessToken(authTokens.accessToken);
+      this.initialized = true;
+    } else {
+      // Use environment-based config
+      const config = this.loadConfig();
+      this.authService = new RedditAuthService(config);
+    }
+
     this.postService = new RedditPostService(this.baseUrl, this.authService, this.rateLimitDelay);
     this.subredditService = new RedditSubredditService(
       this.baseUrl,
@@ -96,6 +114,25 @@ export class RedditService {
       RedditService.instance = new RedditService();
     }
     return RedditService.instance;
+  }
+
+  /**
+   * Initialize the service and authenticate (for singleton pattern)
+   * @throws {RedditError} if initialization fails
+   */
+  public async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      await this.authService.initialize();
+      this.initialized = true;
+    } catch (error) {
+      throw new RedditError(
+        `Failed to initialize Reddit service: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "INITIALIZATION_ERROR",
+        error,
+      );
+    }
   }
 
   /**
@@ -126,25 +163,6 @@ export class RedditService {
       appVersion: "1.0.9",
       username: "AutomatedBot",
     };
-  }
-
-  /**
-   * Initialize the service and authenticate
-   * @throws {RedditError} if initialization fails
-   */
-  public async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    try {
-      await this.authService.initialize();
-      this.initialized = true;
-    } catch (error) {
-      throw new RedditError(
-        `Failed to initialize Reddit service: ${error instanceof Error ? error.message : "Unknown error"}`,
-        "INITIALIZATION_ERROR",
-        error,
-      );
-    }
   }
 
   /**

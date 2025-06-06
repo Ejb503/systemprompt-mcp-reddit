@@ -42,9 +42,22 @@ const responseSchema: JSONSchema7 = {
 
 export const handleConfigureInstructions: ToolHandler<ConfigureInstructionsArgs> = async (
   args,
-  { systemPromptService },
+  { systemPromptService, hasSystemPromptApiKey },
 ) => {
   try {
+    if (!hasSystemPromptApiKey) {
+      return formatToolResponse({
+        status: "error",
+        message:
+          "SystemPrompt API key is required to configure instructions. Please provide X-SystemPrompt-API-Key header.",
+        error: {
+          type: "AUTHENTICATION_ERROR",
+          details: "Missing SystemPrompt API key",
+        },
+        type: "api",
+        title: "Configuration Error",
+      });
+    }
     const instructionBlock: SystempromptBlockRequest = {
       content: JSON.stringify(args),
       type: "block",

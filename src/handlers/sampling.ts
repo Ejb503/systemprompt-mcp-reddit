@@ -9,9 +9,11 @@ import {
   handleAnalyseSubredditCallback,
 } from "./callbacks.js";
 import { handleCreateRedditMessageCallback } from "./callbacks/create-message.js";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 
 export async function sendSamplingRequest(
   request: CreateMessageRequest,
+  extra?: { authInfo?: AuthInfo },
 ): Promise<CreateMessageResult> {
   try {
     validateRequest(request);
