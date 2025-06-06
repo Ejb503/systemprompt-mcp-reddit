@@ -1,9 +1,6 @@
 # Smithery configuration file: https://smithery.ai/docs/build/project-config
 
 startCommand:
-  type: stdio
-  commandFunction:
-    |-
-    (config) => ({ command: 'node', args: ['build/index.js'] })
-  configSchema:
-    type: object
+  type: http
+  url: "http://localhost:3000/mcp"
+  authorizationUrl: "http://localhost:3000/oauth/authorize"
