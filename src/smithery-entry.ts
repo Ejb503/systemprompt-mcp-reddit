@@ -493,7 +493,9 @@ async function main() {
 }
 
 // Run the server in standalone mode if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Use process.argv to check if this is the main module
+const isMainModule = process.argv[1] && process.argv[1].endsWith('smithery-entry.ts');
+if (isMainModule) {
   main().catch((error) => {
     console.error("Fatal error:", error);
     process.exit(1);

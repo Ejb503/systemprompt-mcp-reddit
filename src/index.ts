@@ -8,10 +8,8 @@ async function main() {
   await server.start(parseInt(process.env.PORT || "3000", 10));
 }
 
-// Run the server when executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    console.error("Fatal error:", error);
-    process.exit(1);
-  });
-}
+// Always run the server when index.ts is executed
+main().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});
