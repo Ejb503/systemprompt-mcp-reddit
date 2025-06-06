@@ -51,7 +51,7 @@ export const handleConfigureInstructions: ToolHandler<ConfigureInstructionsArgs>
         message:
           "SystemPrompt API key is required to configure instructions. Please provide X-SystemPrompt-API-Key header.",
         error: {
-          type: "AUTHENTICATION_ERROR",
+          type: "API_ERROR",
           details: "Missing SystemPrompt API key",
         },
         type: "api",
