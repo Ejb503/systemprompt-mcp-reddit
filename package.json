@@ -1,8 +1,9 @@
 {
   "name": "systemprompt-mcp-reddit",
-  "version": "1.0.25",
+  "version": "2.0.0",
   "description": "A specialized Model Context Protocol (MCP) server that enables you to search, read, and interact with Reddit content, leveraging an AI Agent to help with each operation.",
   "type": "module",
+  "module": "./src/smithery-entry.ts",
   "bin": {
     "systemprompt-mcp-reddit": "build/index.js"
   },
@@ -18,7 +19,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "start": "node build/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx watch src/index.ts"
   },
   "repository": {
     "type": "git",

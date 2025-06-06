@@ -1,6 +1,3 @@
 # Smithery configuration file: https://smithery.ai/docs/build/project-config
 
-startCommand:
-  type: http
-  url: "http://localhost:3000/mcp"
-  authorizationUrl: "http://localhost:3000/oauth/authorize"
+runtime: typescript
