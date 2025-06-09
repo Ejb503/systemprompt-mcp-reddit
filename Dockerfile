@@ -13,4 +13,4 @@ RUN npm ci --ignore-scripts && npm run build
 # Production environment
 ENV NODE_ENV=production
 
-ENTRYPOINT ["node", "build/index.js"]
+ENTRYPOINT ["node", "build/smithery-entry.js"]
