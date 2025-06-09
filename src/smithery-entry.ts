@@ -260,8 +260,7 @@ export class RedditMCPServer {
       if (!this.validRedirectUris.includes(authRequest.redirect_uri)) {
         res.status(400).json({
           error: "invalid_request",
-          error_description:
-            "Invalid redirect_uri. Supported URIs: " + this.validRedirectUris.join(", "),
+          error_description: `Invalid redirect_uri. Supported URIs: ${this.validRedirectUris.join(", ")}`,
         });
         return;
       }
@@ -433,12 +432,18 @@ export class RedditMCPServer {
       `${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`,
     ).toString("base64");
 
+    // Reddit requires a descriptive User-Agent with contact info
+    // Format: platform:appid:version (by /u/username)
+    const userAgent =
+      process.env.REDDIT_USER_AGENT ||
+      `${process.platform}:systemprompt-mcp-reddit:v2.0.0 (by /u/AffectionateHoney992'})`;
+
     const response = await fetch("https://www.reddit.com/api/v1/access_token", {
       method: "POST",
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "Reddit MCP Server/1.0",
+        "User-Agent": userAgent,
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
@@ -448,22 +453,30 @@ export class RedditMCPServer {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to exchange Reddit code: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Failed to exchange Reddit code: ${response.status} - ${errorText}`);
     }
 
     return await response.json();
   }
 
   private async getRedditUserInfo(accessToken: string): Promise<any> {
+    // Reddit requires a descriptive User-Agent with contact info
+    // Format: platform:appid:version (by /u/username)
+    const userAgent =
+      process.env.REDDIT_USER_AGENT ||
+      `${process.platform}:systemprompt-mcp-reddit:v2.0.0 (by /u/${process.env.REDDIT_USERNAME || "developer"})`;
+
     const response = await fetch("https://oauth.reddit.com/api/v1/me", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "User-Agent": "Reddit MCP Server/1.0",
+        "User-Agent": userAgent,
       },
     });
 
     if (!response.ok) {
-      throw new Error("Failed to get Reddit user info");
+      const errorText = await response.text();
+      throw new Error(`Failed to get Reddit user info: ${response.status} - ${errorText}`);
     }
 
     return await response.json();
@@ -494,7 +507,7 @@ async function main() {
 
 // Run the server in standalone mode if executed directly
 // Use process.argv to check if this is the main module
-const isMainModule = process.argv[1] && process.argv[1].endsWith('smithery-entry.ts');
+const isMainModule = process.argv[1] && process.argv[1].endsWith("smithery-entry.ts");
 if (isMainModule) {
   main().catch((error) => {
     console.error("Fatal error:", error);
@@ -506,10 +519,10 @@ if (isMainModule) {
 export default function () {
   // Initialize SystemPromptService without API key - it will be set per-request via headers
   SystemPromptService.initialize();
-  
+
   // Create MCP server
   const mcpServer = new Server(serverConfig, serverCapabilities);
-  
+
   // Set up handlers
   mcpServer.setRequestHandler(ListResourcesRequestSchema, handleListResources);
   mcpServer.setRequestHandler(ReadResourceRequestSchema, handleResourceCall);
@@ -518,13 +531,13 @@ export default function () {
   mcpServer.setRequestHandler(ListPromptsRequestSchema, handleListPrompts);
   mcpServer.setRequestHandler(GetPromptRequestSchema, handleGetPrompt);
   mcpServer.setRequestHandler(CreateMessageRequestSchema, sendSamplingRequest);
-  
+
   // For OAuth support, we need to start the HTTP server in the background
   const httpServer = new RedditMCPServer();
   httpServer.start(parseInt(process.env.PORT || "3000", 10)).catch((error) => {
     console.error("Failed to start HTTP server:", error);
   });
-  
+
   // Return the MCP server instance for Smithery
   return mcpServer;
 }

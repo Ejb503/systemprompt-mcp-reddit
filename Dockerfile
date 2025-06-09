@@ -7,7 +7,6 @@ WORKDIR /app
 COPY package.json package-lock.json tsconfig.json tsconfig.test.json ./
 COPY src ./src
 COPY config ./config
-COPY ARCHITECTURE.md TEMPLATE_GUIDE.md README.md LICENSE.md ./
 
 RUN npm ci --ignore-scripts && npm run build
 
