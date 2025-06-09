@@ -16,7 +16,7 @@ env:
     description: "OAuth issuer URL - automatically set based on deployment environment"
     type: "string"
     required: false
-    default: "https://server.smithery.ai/@Ejb503/systemprompt-reddit-mcp/mcp"
+    default: "https://server.smithery.ai/@Ejb503/systemprompt-reddit-mcp"
   REDDIT_CLIENT_ID:
     description: "Reddit OAuth client ID"
     type: "string"
