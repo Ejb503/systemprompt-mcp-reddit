@@ -10,7 +10,7 @@ export const serverConfig: Implementation = {
     icon: "solar:align-horizontal-center-line-duotone",
     color: "primary",
     serverStartTime: Date.now(),
-    environment: process.env.NODE_ENV,
+    environment: "production",
     customData: {
       serverFeatures: ["gmail", "agent", "google", "systemprompt"],
     },

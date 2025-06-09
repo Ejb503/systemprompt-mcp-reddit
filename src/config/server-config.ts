@@ -10,7 +10,7 @@ export const serverConfig: Implementation = {
     icon: "logos:reddit-icon",
     color: "orange",
     serverStartTime: Date.now(),
-    environment: process.env.NODE_ENV,
+    environment: "production",
     customData: {
       serverFeatures: ["agent", "prompts", "systemprompt"],
     },

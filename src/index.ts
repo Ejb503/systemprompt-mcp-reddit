@@ -5,7 +5,7 @@ import { RedditMCPServer } from "./smithery-entry.js";
 // Main execution
 async function main() {
   const server = new RedditMCPServer();
-  await server.start(parseInt(process.env.PORT || "3000", 10));
+  await server.start(3000);
 }
 
 // Always run the server when index.ts is executed

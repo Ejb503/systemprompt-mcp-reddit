@@ -68,6 +68,15 @@ export interface RedditMessageResponse {
  * Main service for interacting with the Reddit API
  * Implements facade pattern to coordinate between specialized services
  */
+// Hardcoded configuration for cloud deployment
+const REDDIT_HARDCODED_CONFIG = {
+  clientId: "BCv-qVAzBGJ_Bras1CWNJg",
+  clientSecret: "riUHKgUWYxfHppndDILsM_FJd4gMuw",
+  appName: "Systemprompt MCP Reddit",
+  appVersion: "2.0.0",
+  username: "AffectionateHoney992"
+};
+
 export class RedditService {
   private static instance: RedditService;
   private readonly baseUrl = "https://oauth.reddit.com";
@@ -84,12 +93,12 @@ export class RedditService {
     if (authTokens) {
       // Create auth service with provided tokens
       const config = {
-        clientId: process.env.REDDIT_CLIENT_ID ?? "",
-        clientSecret: process.env.REDDIT_CLIENT_SECRET ?? "",
+        clientId: REDDIT_HARDCODED_CONFIG.clientId,
+        clientSecret: REDDIT_HARDCODED_CONFIG.clientSecret,
         refreshToken: authTokens.refreshToken,
-        appName: "Systemprompt MCP Reddit",
-        appVersion: "1.0.9",
-        username: "AutomatedBot",
+        appName: REDDIT_HARDCODED_CONFIG.appName,
+        appVersion: REDDIT_HARDCODED_CONFIG.appVersion,
+        username: REDDIT_HARDCODED_CONFIG.username,
       };
       this.authService = new RedditAuthService(config);
       // Set the access token directly
@@ -140,28 +149,23 @@ export class RedditService {
    * @throws {RedditError} if required environment variables are missing
    */
   private loadConfig(): RedditServiceConfig {
-    const requiredEnvVars = {
-      clientId: process.env.REDDIT_CLIENT_ID ?? "",
-      clientSecret: process.env.REDDIT_CLIENT_SECRET ?? "",
-      refreshToken: process.env.REDDIT_REFRESH_TOKEN ?? "",
-    } as const;
-
-    const missingVars = Object.entries(requiredEnvVars)
-      .filter(([, value]) => !value)
-      .map(([key]) => key);
-
-    if (missingVars.length > 0) {
+    // For singleton pattern, we need a refresh token from environment or throw error
+    const refreshToken = process.env.REDDIT_REFRESH_TOKEN ?? "";
+    
+    if (!refreshToken) {
       throw new RedditError(
-        `Missing required environment variables: ${missingVars.join(", ")}`,
+        "REDDIT_REFRESH_TOKEN environment variable is required for singleton initialization",
         "CONFIGURATION_ERROR",
       );
     }
 
     return {
-      ...requiredEnvVars,
-      appName: "Systemprompt MCP Reddit",
-      appVersion: "1.0.9",
-      username: "AutomatedBot",
+      clientId: REDDIT_HARDCODED_CONFIG.clientId,
+      clientSecret: REDDIT_HARDCODED_CONFIG.clientSecret,
+      refreshToken: refreshToken,
+      appName: REDDIT_HARDCODED_CONFIG.appName,
+      appVersion: REDDIT_HARDCODED_CONFIG.appVersion,
+      username: REDDIT_HARDCODED_CONFIG.username,
     };
   }
 

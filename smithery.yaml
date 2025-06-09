@@ -1,3 +1,14 @@
 # Smithery configuration file: https://smithery.ai/docs/build/project-config
 
 runtime: typescript
+
+# Configuration for the systemprompt-mcp-reddit server
+# This server requires a SystemPrompt API key to function
+# Get your free API key at: https://systemprompt.io/console
+
+env:
+  SYSTEMPROMPT_API_KEY:
+    description: "SystemPrompt API key - required for all operations"
+    type: "string" 
+    required: true
+    default: ""
