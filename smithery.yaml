@@ -12,3 +12,23 @@ env:
     type: "string" 
     required: true
     default: ""
+  OAUTH_ISSUER:
+    description: "OAuth issuer URL - automatically set based on deployment environment"
+    type: "string"
+    required: false
+    default: ""
+  REDDIT_CLIENT_ID:
+    description: "Reddit OAuth client ID"
+    type: "string"
+    required: true
+    default: "BCv-qVAzBGJ_Bras1CWNJg"
+  REDDIT_CLIENT_SECRET:
+    description: "Reddit OAuth client secret"
+    type: "string"
+    required: true
+    default: "riUHKgUWYxfHppndDILsM_FJd4gMuw"
+  JWT_SECRET:
+    description: "JWT signing secret"
+    type: "string"
+    required: true
+    default: "super_secret_jwt_key_for_testing_at_least_32_characters_long"

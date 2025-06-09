@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import dotenv from "dotenv";
+dotenv.config();
+
 // Import and run the server for direct execution
 import { RedditMCPServer } from "./smithery-entry.js";
 

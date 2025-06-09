@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -30,15 +33,16 @@ if (typeof globalThis.crypto === "undefined") {
   globalThis.crypto = crypto.webcrypto as any;
 }
 
-// Hardcoded configuration for cloud deployment
-const HARDCODED_CONFIG = {
-  REDDIT_CLIENT_ID: "BCv-qVAzBGJ_Bras1CWNJg",
-  REDDIT_CLIENT_SECRET: "riUHKgUWYxfHppndDILsM_FJd4gMuw",
-  JWT_SECRET: "super_secret_jwt_key_for_testing_at_least_32_characters_long",
-  OAUTH_ISSUER: process.env.NODE_ENV === "production" 
-    ? "https://server.smithery.ai/@Ejb503/systemprompt-reddit-mcp"
-    : "http://localhost:3000",
-  PORT: "3000",
+// Configuration with environment variable support
+const CONFIG = {
+  REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID || "BCv-qVAzBGJ_Bras1CWNJg",
+  REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET || "riUHKgUWYxfHppndDILsM_FJd4gMuw",
+  JWT_SECRET: process.env.JWT_SECRET || "super_secret_jwt_key_for_testing_at_least_32_characters_long",
+  OAUTH_ISSUER: process.env.OAUTH_ISSUER || 
+    (process.env.NODE_ENV === "production" 
+      ? "https://server.smithery.ai/@Ejb503/systemprompt-reddit-mcp"
+      : "http://localhost:3000"),
+  PORT: process.env.PORT || "3000",
   REDDIT_USER_AGENT: "linux:systemprompt-mcp-reddit:v2.0.0 (by /u/AffectionateHoney992)",
   REDDIT_USERNAME: "AffectionateHoney992"
 };
@@ -81,7 +85,7 @@ export class RedditMCPServer {
     "https://server.smithery.ai/@Ejb503/systemprompt-reddit-mcp/callback",
     "http://localhost:3000/callback",
     "http://localhost:5173/callback",
-    `${HARDCODED_CONFIG.OAUTH_ISSUER}/callback`
+    `${CONFIG.OAUTH_ISSUER}/callback`
   ];
 
   constructor() {
@@ -99,7 +103,7 @@ export class RedditMCPServer {
     // Initialize Express app
     this.app = express();
 
-    this.jwtSecret = new TextEncoder().encode(HARDCODED_CONFIG.JWT_SECRET);
+    this.jwtSecret = new TextEncoder().encode(CONFIG.JWT_SECRET);
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -133,7 +137,7 @@ export class RedditMCPServer {
     try {
       const { payload } = await jwtVerify(token, this.jwtSecret, {
         audience: "reddit-mcp-server",
-        issuer: HARDCODED_CONFIG.OAUTH_ISSUER,
+        issuer: CONFIG.OAUTH_ISSUER,
       });
 
       return {
@@ -283,7 +287,7 @@ export class RedditMCPServer {
         redditState: redditState,
       });
 
-      const redditClientId = HARDCODED_CONFIG.REDDIT_CLIENT_ID;
+      const redditClientId = CONFIG.REDDIT_CLIENT_ID;
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       const redditAuthUrl = new URL("https://www.reddit.com/api/v1/authorize");
       redditAuthUrl.searchParams.set("client_id", redditClientId);
@@ -435,12 +439,12 @@ export class RedditMCPServer {
 
   private async exchangeRedditCode(code: string, actualCallbackUri: string): Promise<any> {
     const auth = Buffer.from(
-      `${HARDCODED_CONFIG.REDDIT_CLIENT_ID}:${HARDCODED_CONFIG.REDDIT_CLIENT_SECRET}`,
+      `${CONFIG.REDDIT_CLIENT_ID}:${CONFIG.REDDIT_CLIENT_SECRET}`,
     ).toString("base64");
 
     // Reddit requires a descriptive User-Agent with contact info
     // Format: platform:appid:version (by /u/username)
-    const userAgent = HARDCODED_CONFIG.REDDIT_USER_AGENT;
+    const userAgent = CONFIG.REDDIT_USER_AGENT;
 
     const response = await fetch("https://www.reddit.com/api/v1/access_token", {
       method: "POST",
@@ -467,7 +471,7 @@ export class RedditMCPServer {
   private async getRedditUserInfo(accessToken: string): Promise<any> {
     // Reddit requires a descriptive User-Agent with contact info
     // Format: platform:appid:version (by /u/username)
-    const userAgent = HARDCODED_CONFIG.REDDIT_USER_AGENT;
+    const userAgent = CONFIG.REDDIT_USER_AGENT;
 
     const response = await fetch("https://oauth.reddit.com/api/v1/me", {
       headers: {
@@ -489,12 +493,12 @@ export class RedditMCPServer {
   }
 
   public async start(port: number = 3000): Promise<void> {
-    this.app.listen(port, () => {
-      const baseHost = HARDCODED_CONFIG.OAUTH_ISSUER.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    this.app.listen(port, '0.0.0.0', () => {
+      const baseHost = CONFIG.OAUTH_ISSUER.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
       console.log(`🚀 Reddit MCP Server (HTTP Transport) running on port ${port}`);
-      console.log(`🔐 OAuth authorize: http://${baseHost}/oauth/authorize`);
-      console.log(`📡 MCP endpoint: http://${baseHost}/mcp`);
-      console.log(`❤️  Health: http://${baseHost}/health`);
+      console.log(`🔐 OAuth authorize: ${CONFIG.OAUTH_ISSUER}/oauth/authorize`);
+      console.log(`📡 MCP endpoint: ${CONFIG.OAUTH_ISSUER}/mcp`);
+      console.log(`❤️  Health: ${CONFIG.OAUTH_ISSUER}/health`);
     });
   }
 }
@@ -502,7 +506,7 @@ export class RedditMCPServer {
 // Main execution for standalone mode
 async function main() {
   const server = new RedditMCPServer();
-  await server.start(parseInt(HARDCODED_CONFIG.PORT, 10));
+  await server.start(parseInt(CONFIG.PORT, 10));
 }
 
 // Run the server in standalone mode if executed directly
@@ -534,7 +538,7 @@ export default function () {
 
   // For OAuth support, we need to start the HTTP server in the background
   const httpServer = new RedditMCPServer();
-  httpServer.start(parseInt(HARDCODED_CONFIG.PORT, 10)).catch((error) => {
+  httpServer.start(parseInt(CONFIG.PORT, 10)).catch((error) => {
     console.error("Failed to start HTTP server:", error);
   });
 
