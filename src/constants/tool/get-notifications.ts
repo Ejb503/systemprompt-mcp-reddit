@@ -1,4 +1,4 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 
 export const getNotifications: Tool = {
   name: "get_notifications",

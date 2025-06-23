@@ -1,7 +1,10 @@
-import { ToolHandler, GetCommentArgs, formatToolResponse } from "./types.js";
-import { RedditError } from "@/types/reddit.js";
-import { getCommentSuccessMessage } from "@/constants/tool/get-comment.js";
-import { JSONSchema7 } from "json-schema";
+
+import { getCommentSuccessMessage } from '@reddit/constants/tool/get-comment';
+import { RedditError } from '@reddit/types/reddit';
+import type { JSONSchema7 } from "json-schema";
+
+import { formatToolResponse } from './types';
+import type { ToolHandler, GetCommentArgs} from './types';
 
 const commentSchema: JSONSchema7 = {
   type: "object",

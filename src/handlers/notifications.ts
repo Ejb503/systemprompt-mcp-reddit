@@ -1,10 +1,11 @@
-import { ServerNotification } from "@modelcontextprotocol/sdk/types.js";
-import { server } from "../server.js";
+import type { ServerNotification } from '@modelcontextprotocol/sdk/types.js';
+
+import { serverManager } from '../smithery-entry';
 
 type SamplingCompleteNotification = {
   method: "notifications/sampling/complete";
   params: {
-    _meta: Record<string, unknown>;
+    _meta: Record<string, any>;
     message: string;
     level: "info" | "warning" | "error";
     timestamp: string;
@@ -14,14 +15,23 @@ type SamplingCompleteNotification = {
 type RedditConfigNotification = {
   method: "server/config/changed";
   params: {
-    _meta: Record<string, unknown>;
+    _meta: Record<string, any>;
     message: string;
     level: "info" | "warning" | "error";
     timestamp: string;
   };
 };
 
-export async function sendOperationNotification(operation: string, message: string): Promise<void> {
+type ProgressNotification = {
+  method: "notifications/progress";
+  params: {
+    progressToken: string | number;
+    progress: number;
+    total?: number;
+  };
+};
+
+export async function sendOperationNotification(operation: string, message: string, sessionId?: string): Promise<void> {
   const notification: ServerNotification = {
     method: "notifications/message",
     params: {
@@ -31,7 +41,7 @@ export async function sendOperationNotification(operation: string, message: stri
       timestamp: new Date().toISOString(),
     },
   };
-  await sendNotification(notification);
+  await sendNotification(notification, sessionId);
 }
 
 export async function sendJsonResultNotification(message: string): Promise<void> {
@@ -47,7 +57,7 @@ export async function sendJsonResultNotification(message: string): Promise<void>
   await sendNotification(notification);
 }
 
-export async function sendSamplingCompleteNotification(message: string): Promise<void> {
+export async function sendSamplingCompleteNotification(message: string, sessionId?: string): Promise<void> {
   const notification: SamplingCompleteNotification = {
     method: "notifications/sampling/complete",
     params: {
@@ -57,7 +67,7 @@ export async function sendSamplingCompleteNotification(message: string): Promise
       timestamp: new Date().toISOString(),
     },
   };
-  await sendNotification(notification);
+  await sendNotification(notification, sessionId);
 }
 
 export async function sendRedditConfigNotification(message: string): Promise<void> {
@@ -73,12 +83,56 @@ export async function sendRedditConfigNotification(message: string): Promise<voi
   await sendNotification(notification);
 }
 
-async function sendNotification(
-  notification: ServerNotification | SamplingCompleteNotification | RedditConfigNotification,
-) {
-  await server.notification(notification as ServerNotification);
+export async function sendProgressNotification(
+  progressToken: string | number,
+  progress: number,
+  total?: number,
+  sessionId?: string
+): Promise<void> {
+  const notification: ProgressNotification = {
+    method: "notifications/progress",
+    params: {
+      progressToken,
+      progress,
+      ...(total !== undefined && { total }),
+    },
+  };
+  await sendNotification(notification, sessionId);
 }
 
-export async function updateBlocks() {
-  await server.sendResourceListChanged();
+async function sendNotification(
+  notification: ServerNotification | SamplingCompleteNotification | RedditConfigNotification | ProgressNotification,
+  sessionId?: string
+) {
+  // If sessionId is provided, send only to that specific session
+  if (sessionId) {
+    const server = serverManager.getServerForSession(sessionId);
+    if (!server) {
+      console.warn(`No active server found for session: ${sessionId}`);
+      return;
+    }
+    
+    try {
+      await server.notification(notification as ServerNotification);
+    } catch (err) {
+      console.error(`Failed to send notification to session ${sessionId}`, err);
+    }
+    return;
+  }
+  
+  // Otherwise, broadcast to all active sessions (for global notifications)
+  const activeServers = serverManager.getAllServers();
+  if (activeServers.length === 0) {
+    console.warn("No active MCP server sessions available for notification");
+    return;
+  }
+  
+  const notificationPromises = activeServers.map(server => 
+    server.notification(notification as ServerNotification).catch(err => {
+      console.error("Failed to send notification to session", err);
+    })
+  );
+  
+  await Promise.all(notificationPromises);
 }
+

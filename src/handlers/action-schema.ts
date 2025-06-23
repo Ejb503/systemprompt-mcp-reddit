@@ -1,18 +1,15 @@
-import { SystempromptBlockResponse } from "@/types/systemprompt.js";
-import { JSONSchema7 } from "json-schema";
 import {
   REDDIT_POST_RESPONSE_SCHEMA,
   REDDIT_COMMENT_RESPONSE_SCHEMA,
   REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA,
   REDDIT_MESSAGE_RESPONSE_SCHEMA,
-  REDDIT_INSTRUCTIONS_RESPONSE_SCHEMA,
-} from "@/types/sampling-schemas.js";
+} from '@reddit/types/sampling-schemas';
+import type { JSONSchema7 } from "json-schema";
 
 // Constants for resource types and actions
 export const RESOURCE_TYPES = {
   POST: "reddit_post",
   COMMENT: "reddit_comment",
-  INSTRUCTIONS: "reddit_instructions",
   ANALYSIS: "reddit_subreddit_analysis",
   MESSAGE: "reddit_message",
 } as const;
@@ -21,8 +18,6 @@ export const ACTIONS = {
   CREATE_REDDIT_POST: "create_reddit_post",
   CREATE_REDDIT_COMMENT: "create_reddit_comment",
   CREATE_REDDIT_MESSAGE: "create_reddit_message",
-  DELETE_REDDIT_CONTENT: "delete_reddit_content",
-  CONFIGURE_REDDIT_INSTRUCTIONS: "configure_reddit_instructions",
   SEND_REDDIT_POST: "send_reddit_post",
   SEND_REDDIT_COMMENT: "send_reddit_comment",
   SEND_REDDIT_MESSAGE: "send_reddit_message",
@@ -46,7 +41,6 @@ const contentSchemas: Record<string, JSONSchema7> = {
   [RESOURCE_TYPES.POST]: REDDIT_POST_RESPONSE_SCHEMA,
   [RESOURCE_TYPES.COMMENT]: REDDIT_COMMENT_RESPONSE_SCHEMA,
   [RESOURCE_TYPES.ANALYSIS]: REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA,
-  [RESOURCE_TYPES.INSTRUCTIONS]: REDDIT_INSTRUCTIONS_RESPONSE_SCHEMA,
   [RESOURCE_TYPES.MESSAGE]: REDDIT_MESSAGE_RESPONSE_SCHEMA,
 };
 
@@ -78,16 +72,6 @@ export const getRedditSchemas = (resourceType: string): Record<string, JSONSchem
     } as JSONSchema7;
   }
 
-  if (availableActions.includes(ACTIONS.DELETE_REDDIT_CONTENT)) {
-    schemas[ACTIONS.DELETE_REDDIT_CONTENT] = {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "The ID of the resource to delete" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    } as JSONSchema7;
-  }
 
   if (availableActions.includes(ACTIONS.CREATE_REDDIT_COMMENT)) {
     schemas[ACTIONS.CREATE_REDDIT_COMMENT] = {
@@ -101,19 +85,6 @@ export const getRedditSchemas = (resourceType: string): Record<string, JSONSchem
     } as JSONSchema7;
   }
 
-  if (availableActions.includes(ACTIONS.CONFIGURE_REDDIT_INSTRUCTIONS)) {
-    schemas[ACTIONS.CONFIGURE_REDDIT_INSTRUCTIONS] = {
-      type: "object",
-      properties: {
-        content: {
-          type: "string",
-          description: "Instructions for content generation and interaction with Reddit",
-        },
-      },
-      required: ["content"],
-      additionalProperties: false,
-    } as JSONSchema7;
-  }
 
   if (availableActions.includes(ACTIONS.SEND_REDDIT_COMMENT)) {
     schemas[ACTIONS.SEND_REDDIT_COMMENT] = {
@@ -146,32 +117,29 @@ export const getRedditSchemas = (resourceType: string): Record<string, JSONSchem
 
 // Helper to get available actions based on resource type
 export const getAvailableActions = (resourceType: string): string[] => {
-  const baseActions = [ACTIONS.DELETE_REDDIT_CONTENT];
-
   switch (resourceType) {
     case RESOURCE_TYPES.POST:
-      return [ACTIONS.SEND_REDDIT_POST, ...baseActions];
+      return [ACTIONS.SEND_REDDIT_POST];
     case RESOURCE_TYPES.COMMENT:
-      return [ACTIONS.SEND_REDDIT_COMMENT, ...baseActions];
-    case RESOURCE_TYPES.INSTRUCTIONS:
-      return [ACTIONS.CONFIGURE_REDDIT_INSTRUCTIONS, ...baseActions];
+      return [ACTIONS.SEND_REDDIT_COMMENT];
     case RESOURCE_TYPES.ANALYSIS:
-      return [ACTIONS.VIEW_REDDIT_ANALYSIS, ...baseActions];
+      return [ACTIONS.VIEW_REDDIT_ANALYSIS];
     case RESOURCE_TYPES.MESSAGE:
-      return [ACTIONS.SEND_REDDIT_MESSAGE, ...baseActions];
+      return [ACTIONS.SEND_REDDIT_MESSAGE];
     default:
-      return baseActions;
+      return [];
   }
 };
 
-// Helper to check if a block is a Reddit resource
-export const isRedditResource = (block: SystempromptBlockResponse): boolean =>
-  block.prefix === RESOURCE_TYPES.POST ||
-  block.prefix === RESOURCE_TYPES.COMMENT ||
-  block.prefix === RESOURCE_TYPES.INSTRUCTIONS;
+// Helper to check if a block is a Reddit resource (deprecated - no longer used)
+export const isRedditResource = (prefix: string): boolean =>
+  prefix === RESOURCE_TYPES.POST ||
+  prefix === RESOURCE_TYPES.COMMENT ||
+  prefix === RESOURCE_TYPES.ANALYSIS ||
+  prefix === RESOURCE_TYPES.MESSAGE;
 
 // Type assertion helper for Reddit post arguments
-export const assertRedditPostArgs = (args: unknown): RedditPostArgs => {
+export const assertRedditPostArgs = (args: any): RedditPostArgs => {
   const typedArgs = args as RedditPostArgs;
 
   if (!typedArgs.subreddit || !typedArgs.title) {
@@ -182,7 +150,7 @@ export const assertRedditPostArgs = (args: unknown): RedditPostArgs => {
 };
 
 // Type assertion helper for Reddit reply arguments
-export const assertRedditReplyArgs = (args: unknown): RedditReplyArgs => {
+export const assertRedditReplyArgs = (args: any): RedditReplyArgs => {
   const typedArgs = args as RedditReplyArgs;
 
   if (!typedArgs.id || !typedArgs.content) {

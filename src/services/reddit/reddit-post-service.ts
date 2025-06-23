@@ -1,6 +1,25 @@
-import { RedditAuthService } from "./reddit-auth-service.js";
-import { RedditError, RedditMessageParams, RedditMessageResponse } from "@/types/reddit.js";
-import {
+/**
+ * @file Reddit post and comment service
+ * @module services/reddit/reddit-post-service
+ * 
+ * @remarks
+ * This service handles all post and comment-related operations for the Reddit API.
+ * It extends RedditFetchService to inherit common fetching functionality and adds
+ * specific methods for creating, fetching, and interacting with posts and comments.
+ * 
+ * The service handles:
+ * - Fetching posts with various sort options
+ * - Creating new posts (text, link, image, video, gallery)
+ * - Sending comments and replies
+ * - Fetching individual posts and comments
+ * - Managing notifications and messages
+ * - Searching Reddit content
+ * 
+ * @see {@link https://www.reddit.com/dev/api/#section_listings} Reddit Listings API
+ * @see {@link https://www.reddit.com/dev/api/#section_links_and_comments} Reddit Links & Comments API
+ */
+
+import type { RedditMessageParams, RedditMessageResponse ,
   RedditPost,
   RedditPostParams,
   RedditPostResponse,
@@ -10,20 +29,81 @@ import {
   RedditPostWithComments,
   RedditNotification,
   FetchNotificationsOptions,
-  RedditComment,
-} from "@/types/reddit.js";
-import { RedditFetchService } from "./reddit-fetch-service.js";
+  RedditComment} from '@reddit/types/reddit';
+import { RedditError 
+} from '@reddit/types/reddit';
+
+
 import {
   transformPost,
   transformComment,
   transformNotification,
-} from "../../utils/reddit-transformers.js";
+} from '../../utils/reddit-transformers';
 
+import type { RedditAuthService } from './reddit-auth-service';
+import { RedditFetchService } from './reddit-fetch-service';
+
+/**
+ * Service for handling Reddit post and comment operations
+ * 
+ * @remarks
+ * This service extends RedditFetchService to provide specialized methods
+ * for working with Reddit posts, comments, and user interactions.
+ * All methods include automatic rate limiting and error handling.
+ * 
+ * @example
+ * ```typescript
+ * const postService = new RedditPostService(
+ *   'https://oauth.reddit.com',
+ *   authService,
+ *   2000 // 2 second rate limit
+ * );
+ * 
+ * const posts = await postService.fetchPosts({
+ *   subreddit: 'programming',
+ *   sort: 'hot',
+ *   limit: 25
+ * });
+ * ```
+ */
 export class RedditPostService extends RedditFetchService {
+  /**
+   * Creates a new Reddit post service
+   * 
+   * @param baseUrl - The base URL for Reddit API requests (https://oauth.reddit.com)
+   * @param authService - The authentication service instance
+   * @param rateLimitDelay - Delay in milliseconds between API requests
+   */
   constructor(baseUrl: string, authService: RedditAuthService, rateLimitDelay: number) {
     super(baseUrl, authService, rateLimitDelay);
   }
 
+  /**
+   * Fetches posts from Reddit based on the provided options
+   * 
+   * @param options - Options for fetching posts
+   * @param options.sort - Sort order: 'hot', 'new', or 'controversial'
+   * @param options.limit - Maximum number of posts to fetch (default: 25)
+   * @param options.subreddit - Subreddit to fetch from (optional)
+   * @returns Array of Reddit posts
+   * @throws {RedditError} Thrown if sort option is invalid or API request fails
+   * 
+   * @example
+   * ```typescript
+   * // Fetch hot posts from a specific subreddit
+   * const posts = await postService.fetchPosts({
+   *   subreddit: 'typescript',
+   *   sort: 'hot',
+   *   limit: 50
+   * });
+   * 
+   * // Fetch new posts from home feed
+   * const homePosts = await postService.fetchPosts({
+   *   sort: 'new',
+   *   limit: 25
+   * });
+   * ```
+   */
   public async fetchPosts(
     options: FetchPostsOptions = { sort: "hot", subreddit: "" },
   ): Promise<RedditPost[]> {
@@ -41,11 +121,27 @@ export class RedditPostService extends RedditFetchService {
     }
   }
 
+  /**
+   * Formats a subreddit name by removing the r/ prefix if present
+   * 
+   * @param subreddit - The subreddit name to format
+   * @returns Formatted subreddit name without r/ prefix
+   * @internal
+   */
   private formatSubreddit(subreddit?: string): string {
-    if (!subreddit) return "";
+    if (!subreddit) {return "";}
     return subreddit.replace(/^r\//, "");
   }
 
+  /**
+   * Fetches hot posts from Reddit
+   * 
+   * @param subreddit - Optional subreddit to fetch from
+   * @param limit - Maximum number of posts to fetch
+   * @returns Array of hot posts
+   * @throws {RedditError} Thrown if API request fails
+   * @internal
+   */
   private async getHotPosts(subreddit?: string, limit: number = 10): Promise<RedditPost[]> {
     const formattedSubreddit = this.formatSubreddit(subreddit);
     const endpoint = formattedSubreddit
@@ -56,6 +152,15 @@ export class RedditPostService extends RedditFetchService {
     return data.data.children?.map((child) => transformPost(child.data)) ?? [];
   }
 
+  /**
+   * Fetches new posts from Reddit
+   * 
+   * @param subreddit - Optional subreddit to fetch from
+   * @param limit - Maximum number of posts to fetch
+   * @returns Array of new posts sorted by creation time
+   * @throws {RedditError} Thrown if API request fails
+   * @internal
+   */
   private async getNewPosts(subreddit?: string, limit: number = 10): Promise<RedditPost[]> {
     const formattedSubreddit = this.formatSubreddit(subreddit);
     const endpoint = formattedSubreddit
@@ -66,6 +171,15 @@ export class RedditPostService extends RedditFetchService {
     return data.data.children?.map((child) => transformPost(child.data)) ?? [];
   }
 
+  /**
+   * Fetches controversial posts from Reddit
+   * 
+   * @param subreddit - Optional subreddit to fetch from
+   * @param limit - Maximum number of posts to fetch
+   * @returns Array of controversial posts
+   * @throws {RedditError} Thrown if API request fails
+   * @internal
+   */
   private async getControversialPosts(
     subreddit?: string,
     limit: number = 10,
@@ -79,6 +193,29 @@ export class RedditPostService extends RedditFetchService {
     return data.data.children?.map((child) => transformPost(child.data)) ?? [];
   }
 
+  /**
+   * Creates a new post on Reddit
+   * 
+   * @param params - Parameters for creating the post
+   * @param params.subreddit - The subreddit to post in (without r/ prefix)
+   * @param params.title - The post title (1-300 characters)
+   * @param params.content - The post content (text/markdown)
+   * @returns Response containing the created post details
+   * @throws {RedditError} Thrown if required fields are missing or API request fails
+   * 
+   * @remarks
+   * This method currently only supports text posts. For link, image, video,
+   * or gallery posts, additional parameters would need to be implemented.
+   * 
+   * @example
+   * ```typescript
+   * const post = await postService.createPost({
+   *   subreddit: 'test',
+   *   title: 'My First Post',
+   *   content: 'This is the post content'
+   * });
+   * ```
+   */
   public async createPost(params: RedditPostParams): Promise<RedditPostResponse> {
     const { subreddit, title, content } = params;
 
@@ -99,6 +236,30 @@ export class RedditPostService extends RedditFetchService {
     return response;
   }
 
+  /**
+   * Fetches a single Reddit post by ID, including its comments
+   * 
+   * @param id - The post ID (with or without t3_ prefix)
+   * @returns The post with its comment tree
+   * @throws {RedditError} Thrown if post not found or API request fails
+   * 
+   * @remarks
+   * This method fetches both the post metadata and its comment tree.
+   * Comments are returned as a nested structure preserving the thread hierarchy.
+   * 
+   * @example
+   * ```typescript
+   * const post = await postService.fetchPostById('abc123');
+   * console.log(post.title);
+   * console.log(`${post.comments.length} top-level comments`);
+   * 
+   * // Access nested replies
+   * post.comments.forEach(thread => {
+   *   console.log(thread.comment.body);
+   *   console.log(`${thread.replies.length} replies`);
+   * });
+   * ```
+   */
   public async fetchPostById(id: string): Promise<RedditPostWithComments> {
     try {
       // Reddit API requires the post ID to be prefixed with t3_
@@ -145,6 +306,19 @@ export class RedditPostService extends RedditFetchService {
     }
   }
 
+  /**
+   * Recursively processes a Reddit comment tree into a structured format
+   * 
+   * @param commentListing - Raw comment data from Reddit API
+   * @returns Array of comment threads with nested replies
+   * 
+   * @remarks
+   * This method recursively processes the comment tree structure returned by Reddit.
+   * Each comment can have replies, which can have their own replies, etc.
+   * The method preserves this hierarchical structure.
+   * 
+   * @internal
+   */
   private processCommentTree(commentListing: any[]): RedditCommentThread[] {
     if (!commentListing || !Array.isArray(commentListing)) {
       return [];
@@ -173,6 +347,33 @@ export class RedditPostService extends RedditFetchService {
       });
   }
 
+  /**
+   * Fetches user notifications from Reddit inbox
+   * 
+   * @param options - Options for filtering and paginating notifications
+   * @param options.filter - Filter type: 'all', 'unread', 'messages', 'comments', 'mentions'
+   * @param options.limit - Maximum number of notifications to fetch (default: 25)
+   * @param options.after - Pagination cursor for next page
+   * @param options.before - Pagination cursor for previous page
+   * @param options.markRead - Whether to mark fetched notifications as read
+   * @returns Array of notifications
+   * @throws {RedditError} Thrown if API request fails
+   * 
+   * @example
+   * ```typescript
+   * // Get all unread notifications
+   * const unread = await postService.fetchNotifications({
+   *   filter: 'unread',
+   *   limit: 50
+   * });
+   * 
+   * // Get only comment replies
+   * const comments = await postService.fetchNotifications({
+   *   filter: 'comments',
+   *   limit: 25
+   * });
+   * ```
+   */
   public async fetchNotifications(
     options: FetchNotificationsOptions = {},
   ): Promise<RedditNotification[]> {
@@ -204,8 +405,8 @@ export class RedditPostService extends RedditFetchService {
       // Add parameters
       const params = new URLSearchParams();
       params.append("limit", limit.toString());
-      if (options.after) params.append("after", options.after);
-      if (options.before) params.append("before", options.before);
+      if (options.after) {params.append("after", options.after);}
+      if (options.before) {params.append("before", options.before);}
 
       endpoint += `?${params.toString()}`;
 
@@ -431,6 +632,36 @@ export class RedditPostService extends RedditFetchService {
     }
   }
 
+  /**
+   * Sends a private message to another Reddit user
+   * 
+   * @param params - Message parameters
+   * @param params.recipient - Username of recipient (with or without u/ prefix)
+   * @param params.subject - Message subject (max 100 characters)
+   * @param params.content - Message body (max 10000 characters)
+   * @returns Response containing sent message details
+   * @throws {RedditError} Thrown if:
+   *   - Recipient is missing or invalid
+   *   - Reddit API returns errors
+   *   - API request fails
+   * 
+   * @remarks
+   * The method automatically:
+   * - Cleans the recipient username (removes u/ prefix)
+   * - Truncates subject to 100 characters
+   * - Generates a unique message ID
+   * - Handles Reddit API error responses
+   * 
+   * @example
+   * ```typescript
+   * const message = await postService.sendMessage({
+   *   recipient: 'username',
+   *   subject: 'Hello!',
+   *   content: 'This is a test message.'
+   * });
+   * console.log(`Message sent with ID: ${message.id}`);
+   * ```
+   */
   public async sendMessage(params: RedditMessageParams): Promise<RedditMessageResponse> {
     try {
       const { recipient, subject, content } = params;

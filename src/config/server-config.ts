@@ -1,4 +1,4 @@
-import { Implementation, ServerCapabilities } from "@modelcontextprotocol/sdk/types.js";
+import type { Implementation, ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
 
 export const serverConfig: Implementation = {
   name: "systemprompt-mcp-reddit",
@@ -12,26 +12,14 @@ export const serverConfig: Implementation = {
     serverStartTime: Date.now(),
     environment: "production",
     customData: {
-      serverFeatures: ["agent", "prompts", "systemprompt"],
+      serverFeatures: ["agent", "systemprompt"],
     },
   },
 };
 
 export const serverCapabilities: { capabilities: ServerCapabilities } = {
   capabilities: {
-    resources: {
-      listChanged: true,
-    },
-    tools: {
-      listChanged: true,
-    },
-    prompts: {
-      listChanged: true,
-    },
+    tools: {},
     sampling: {},
-    logging: {},
-    _meta: {
-      required: ["configure_instructions"],
-    },
   },
 };

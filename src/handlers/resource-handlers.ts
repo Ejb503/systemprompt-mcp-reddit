@@ -1,14 +1,15 @@
-import {
+import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
+import type {
   ListResourcesRequest,
   ListResourcesResult,
   ReadResourceRequest,
   ReadResourceResult,
-} from "@modelcontextprotocol/sdk/types.js";
-import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
-import { SystemPromptService } from "../services/systemprompt-service.js";
-import { SystempromptBlockResponse } from "@/types/systemprompt.js";
-import { getAvailableActions, getRedditSchemas } from "./action-schema.js";
-import { RedditService } from "../services/reddit/reddit-service.js";
+} from '@modelcontextprotocol/sdk/types.js';
+import { RedditService } from '../services/reddit/reddit-service';
+
+
+import { getAvailableActions, getRedditSchemas } from './action-schema';
+
 
 function getResourceType(prefix: string): string {
   switch (prefix) {
@@ -30,33 +31,20 @@ export async function handleListResources(
   extra?: { authInfo?: AuthInfo },
 ): Promise<ListResourcesResult> {
   try {
-    const systemPromptService = SystemPromptService.getInstance();
-    let resources: any[] = [];
-
-    // Only try to fetch SystemPrompt resources if API key is provided
-    if (extra?.authInfo?.extra?.systempromptApiKey) {
-      try {
-        systemPromptService.setApiKey(extra.authInfo.extra.systempromptApiKey as string);
-        const blocks = await systemPromptService.listBlocks();
-
-        // Map blocks to resources
-        resources = blocks.map((block) => ({
-          uri: `resource:///block/${block.id}`,
-          name: block.metadata.title || `Block ${block.id}`,
-          description: block.metadata.description || `SystemPrompt block: ${block.prefix}`,
-          mimeType: "text/plain",
-        }));
-      } catch (error) {
-        console.warn("Failed to fetch SystemPrompt resources:", error);
-        // Continue with empty resources instead of failing
-      }
-    }
+    const resources = [
+      {
+        uri: "reddit://config",
+        name: "Reddit Configuration",
+        description: "Current Reddit authentication and configuration settings",
+        mimeType: "application/json",
+      },
+    ];
 
     return { resources };
   } catch (error) {
     console.error("❌ Error in handleListResources:", error);
     throw new Error(
-      `Failed to fetch blocks from systemprompt.io: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to list resources: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -94,39 +82,12 @@ export async function handleResourceCall(
       };
     }
 
-    // Handle SystemPrompt block resources
-    const match = uri.match(/^resource:\/\/\/block\/(.+)$/);
-    if (!match) {
-      throw new Error(
-        "Invalid resource URI format - expected resource:///block/{id} or reddit://config",
-      );
-    }
-
-    const blockId = match[1];
-
-    // Check if SystemPrompt API key is available
-    if (!authInfo?.extra?.systempromptApiKey) {
-      throw new Error(
-        "SystemPrompt API key is required to access block resources. Please provide X-SystemPrompt-API-Key header.",
-      );
-    }
-
-    const systemPromptService = SystemPromptService.getInstance();
-    systemPromptService.setApiKey(authInfo.extra.systempromptApiKey as string);
-    const block = await systemPromptService.getBlock(blockId);
-
-    return {
-      contents: [
-        {
-          uri: uri,
-          mimeType: "text/plain",
-          text: block.content,
-        },
-      ],
-    };
+    throw new Error(
+      "Invalid resource URI format - only reddit://config is supported",
+    );
   } catch (error) {
     throw new Error(
-      `Failed to fetch block from systemprompt.io: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to fetch resource: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

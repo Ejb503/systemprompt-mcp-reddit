@@ -1,11 +1,11 @@
-export { handleCreateRedditPostCallback } from "./create-post.js";
-export { handleCreateRedditCommentCallback } from "./create-comment.js";
-export { handleAnalyseSubredditCallback } from "./analyse-subreddit.js";
-export { handleSuggestActionCallback } from "./suggest-action.js";
-export { handleCreateRedditMessageCallback } from "./create-message.js";
+export { handleCreateRedditPostCallback } from './create-post';
+export { handleCreateRedditCommentCallback } from './create-comment';
+export { handleAnalyseSubredditCallback } from './analyse-subreddit';
+export { handleSuggestActionCallback } from './suggest-action';
+export { handleCreateRedditMessageCallback } from './create-message';
 
-export type { GeneratedRedditPost } from "./create-post.js";
-export type { GeneratedRedditComment } from "./create-comment.js";
-export type { GeneratedSubredditAnalysis } from "./analyse-subreddit.js";
-export type { GeneratedSuggestAction } from "./suggest-action.js";
-export type { GeneratedRedditMessage } from "./create-message.js";
+export type { GeneratedRedditPost } from './create-post';
+export type { GeneratedRedditComment } from './create-comment';
+export type { GeneratedSubredditAnalysis } from './analyse-subreddit';
+export type { GeneratedSuggestAction } from './suggest-action';
+export type { GeneratedRedditMessage } from './create-message';

@@ -1,114 +1,104 @@
-import { ToolHandler, CreateRedditPostArgs, formatToolResponse } from "./types.js";
-import { RedditError } from "@/types/reddit.js";
-import { CREATE_REDDIT_POST_PROMPT } from "@/constants/sampling/index.js";
-import { sendSamplingRequest } from "@/handlers/sampling.js";
-import { handleGetPrompt } from "@/handlers/prompt-handlers.js";
-import { injectVariables } from "@/utils/message-handlers.js";
-import { TOOL_ERROR_MESSAGES } from "@/constants/tools.js";
-import { createRedditPostSuccessMessage } from "@/constants/tool/create-post.js";
-import { JSONSchema7 } from "json-schema";
+import { CREATE_REDDIT_POST_PROMPT } from '@reddit/constants/sampling/index';
+import { createRedditPostSuccessMessage } from '@reddit/constants/tool/create-post';
+import { TOOL_ERROR_MESSAGES } from '@reddit/constants/tools';
+import { handleGetPrompt } from '@reddit/handlers/prompt-handlers';
+import { sendSamplingRequest } from '@reddit/handlers/sampling';
+import { RedditError } from '@reddit/types/reddit';
+import { injectVariables } from '@reddit/utils/message-handlers';
+import type { JSONSchema7 } from 'json-schema';
+
+import { formatToolResponse } from './types';
+import type { ToolHandler, CreateRedditPostArgs } from './types';
 
 const responseSchema: JSONSchema7 = {
-  type: "object",
+  type: 'object',
   properties: {
-    status: { type: "string", enum: ["success", "error"] },
-    message: { type: "string" },
+    status: { type: 'string', enum: ['success', 'error'] },
+    message: { type: 'string' },
     result: {
-      type: "object",
+      type: 'object',
       properties: {
-        status: { type: "string", enum: ["pending"] },
-        subreddit: { type: "string" },
+        status: { type: 'string', enum: ['pending'] },
+        subreddit: { type: 'string' },
         post: {
-          type: "object",
+          type: 'object',
           properties: {
             subreddit: {
-              type: "string",
-              description: "Subreddit to post to (without r/ prefix)",
+              type: 'string',
+              description: 'Subreddit to post to (without r/ prefix)',
             },
             title: {
-              type: "string",
-              description: "Post title (1-300 characters)",
+              type: 'string',
+              description: 'Post title (1-300 characters)',
               minLength: 1,
               maxLength: 300,
             },
             content: {
-              type: "string",
-              description: "Text content for the post",
+              type: 'string',
+              description: 'Text content for the post',
             },
             flair: {
-              type: "object",
-              description: "Flair information for the post",
+              type: 'object',
+              description: 'Flair information for the post',
               properties: {
                 id: {
-                  type: "string",
-                  description: "ID of the selected flair",
+                  type: 'string',
+                  description: 'ID of the selected flair',
                 },
                 text: {
-                  type: "string",
-                  description: "Text of the selected flair",
+                  type: 'string',
+                  description: 'Text of the selected flair',
                 },
               },
-              required: ["id", "text"],
+              required: ['id', 'text'],
             },
             sendreplies: {
-              type: "boolean",
-              description: "Whether to send replies to inbox",
+              type: 'boolean',
+              description: 'Whether to send replies to inbox',
               default: true,
             },
             nsfw: {
-              type: "boolean",
-              description: "Whether to mark as NSFW",
+              type: 'boolean',
+              description: 'Whether to mark as NSFW',
               default: false,
             },
             spoiler: {
-              type: "boolean",
-              description: "Whether to mark as spoiler",
+              type: 'boolean',
+              description: 'Whether to mark as spoiler',
               default: false,
             },
           },
-          required: ["subreddit", "title", "content"],
+          required: ['subreddit', 'title', 'content'],
         },
         availableFlairs: {
-          type: "array",
-          description: "List of available flairs for the subreddit",
+          type: 'array',
+          description: 'List of available flairs for the subreddit',
           items: {
-            type: "object",
+            type: 'object',
             properties: {
-              id: { type: "string" },
-              text: { type: "string" },
-              type: { type: "string", enum: ["text", "richtext", "image"] },
-              textEditable: { type: "boolean" },
-              backgroundColor: { type: "string" },
-              textColor: { type: "string" },
-              modOnly: { type: "boolean" },
+              id: { type: 'string' },
+              text: { type: 'string' },
+              type: { type: 'string', enum: ['text', 'richtext', 'image'] },
+              textEditable: { type: 'boolean' },
+              backgroundColor: { type: 'string' },
+              textColor: { type: 'string' },
+              modOnly: { type: 'boolean' },
             },
-            required: ["id", "text", "type"],
+            required: ['id', 'text', 'type'],
           },
         },
       },
-      required: ["status", "subreddit", "post", "availableFlairs"],
+      required: ['status', 'subreddit', 'post', 'availableFlairs'],
     },
   },
-  required: ["status", "message", "result"],
+  required: ['status', 'message', 'result'],
 };
 
 export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
   args,
-  { systemPromptService, redditService, hasSystemPromptApiKey },
+  { redditService, sessionId },
 ) => {
   try {
-    let instructionsBlock = null;
-
-    // Try to get SystemPrompt instructions if API key is available
-    if (hasSystemPromptApiKey) {
-      try {
-        const configBlocks = await systemPromptService.listBlocks();
-        instructionsBlock = configBlocks.find((block) => block.prefix === "reddit_instructions");
-      } catch (error) {
-        console.warn("Failed to fetch SystemPrompt instructions, proceeding without them:", error);
-      }
-    }
-
     // Fetch subreddit info including flairs
     const subredditInfo = await redditService.getSubredditInfo(args.subreddit);
     const flairs = await redditService.getSubredditFlairs(args.subreddit);
@@ -116,11 +106,10 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
     // Convert all values to strings and include configs
     const stringArgs = {
       ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, String(v)])),
-      type: "post",
+      type: 'post',
       flairRequired: String(subredditInfo.flairRequired || false),
       availableFlairs: JSON.stringify(flairs),
       subredditRules: JSON.stringify(subredditInfo),
-      redditInstructions: instructionsBlock?.content || "No specific instructions configured",
       redditConfig: JSON.stringify({
         allowedPostTypes: subredditInfo.allowedPostTypes,
         rules: subredditInfo.rules,
@@ -131,7 +120,7 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
     };
 
     const prompt = await handleGetPrompt({
-      method: "prompts/get",
+      method: 'prompts/get',
       params: {
         name: CREATE_REDDIT_POST_PROMPT.name,
         arguments: stringArgs,
@@ -143,40 +132,51 @@ export const handleCreateRedditPost: ToolHandler<CreateRedditPostArgs> = async (
       throw new Error(`${TOOL_ERROR_MESSAGES.TOOL_CALL_FAILED} No response schema found`);
     }
 
-    await sendSamplingRequest({
-      method: "sampling/createMessage",
-      params: {
-        messages: CREATE_REDDIT_POST_PROMPT.messages.map((msg) =>
-          injectVariables(msg, stringArgs),
-        ) as Array<{
-          role: "user" | "assistant";
-          content: { type: "text"; text: string };
-        }>,
-        maxTokens: 100000,
-        temperature: 0.7,
-        _meta: {
-          callback: "create_post_callback",
-          responseSchema: promptResponseSchema,
+    if (!sessionId) {
+      throw new Error('Session ID is required for sampling requests');
+    }
+
+    // Generate a unique progress token for this sampling request
+    const progressToken = `create-post-${sessionId}-${Date.now()}`;
+
+    sendSamplingRequest(
+      {
+        method: 'sampling/createMessage',
+        params: {
+          messages: CREATE_REDDIT_POST_PROMPT.messages.map((msg) =>
+            injectVariables(msg, stringArgs),
+          ) as Array<{
+            role: 'user' | 'assistant';
+            content: { type: 'text'; text: string };
+          }>,
+          maxTokens: 100000,
+          temperature: 0.7,
+          _meta: {
+            callback: 'create_post_callback',
+            responseSchema: promptResponseSchema,
+            progressToken,
+          },
+          arguments: stringArgs,
         },
-        arguments: stringArgs,
       },
-    });
+      { sessionId },
+    );
 
     return formatToolResponse({
       message: createRedditPostSuccessMessage,
-      type: "sampling",
-      title: "Create Reddit Message",
+      type: 'sampling',
+      title: 'Create Reddit Message',
     });
   } catch (error) {
     return formatToolResponse({
-      status: "error",
-      message: `Failed to create Reddit post: ${error instanceof Error ? error.message : "Unknown error"}`,
+      status: 'error',
+      message: `Failed to create Reddit post: ${error instanceof Error ? error.message : 'Unknown error'}`,
       error: {
-        type: error instanceof RedditError ? error.type : "API_ERROR",
+        type: error instanceof RedditError ? error.type : 'API_ERROR',
         details: error,
       },
-      type: "sampling",
-      title: "Error Creating Post",
+      type: 'sampling',
+      title: 'Error Creating Post',
     });
   }
 };

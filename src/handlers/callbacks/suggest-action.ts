@@ -1,9 +1,9 @@
-import { CreateMessageResult } from "@modelcontextprotocol/sdk/types.js";
-import { SystemPromptService } from "../../services/systemprompt-service.js";
-import { SystempromptBlockRequest } from "@/types/systemprompt.js";
-import { sendSamplingCompleteNotification, updateBlocks } from "../notifications.js";
-import { formatToolResponse } from "../tools/types.js";
-import { JSONSchema7 } from "json-schema";
+import type { CreateMessageResult } from '@modelcontextprotocol/sdk/types.js';
+import type { JSONSchema7 } from "json-schema";
+
+import { sendSamplingCompleteNotification } from '../notifications';
+import { formatToolResponse } from '../tools/types';
+
 
 // Interface for suggested action response
 export interface GeneratedSuggestAction {
@@ -12,30 +12,11 @@ export interface GeneratedSuggestAction {
   reasoning: string;
   content?: string;
   id?: string;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
-const blockSchema: JSONSchema7 = {
-  type: "object",
-  properties: {
-    id: { type: "string" },
-    content: { type: "string" },
-    type: { type: "string" },
-    prefix: { type: "string" },
-    metadata: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        description: { type: "string" },
-        tag: { type: "array", items: { type: "string" } },
-      },
-      required: ["title", "description", "tag"],
-    },
-  },
-  required: ["id", "content", "type", "prefix", "metadata"],
-};
 
-function isTextContent(content: unknown): content is { type: "text"; text: string } {
+function isTextContent(content: any): content is { type: "text"; text: string } {
   return (
     typeof content === "object" &&
     content !== null &&
@@ -46,9 +27,7 @@ function isTextContent(content: unknown): content is { type: "text"; text: strin
   );
 }
 
-export async function handleSuggestActionCallback(result: CreateMessageResult): Promise<string> {
-  const systemPromptService = SystemPromptService.getInstance();
-
+export async function handleSuggestActionCallback(result: CreateMessageResult, sessionId: string): Promise<string> {
   try {
     if (!isTextContent(result.content)) {
       throw new Error("Invalid content format received from LLM");
@@ -60,31 +39,14 @@ export async function handleSuggestActionCallback(result: CreateMessageResult): 
       throw new Error("Invalid action data: missing required fields (action or reasoning)");
     }
 
-    // Create a block to store the suggested action
-    const actionBlock: SystempromptBlockRequest = {
-      content: JSON.stringify(actionData),
-      type: "block",
-      prefix: "reddit_suggested_action",
-      metadata: {
-        title: `Suggested Reddit Action: ${actionData.action}`,
-        description: `Generated action suggestion for Reddit`,
-        tag: ["mcp_systemprompt_reddit"],
-      },
-    };
+    const message = `Reddit action suggestion generated: ${actionData.action}`;
 
-    // Create new block
-    const savedBlock = await systemPromptService.createBlock(actionBlock);
-
-    const notificationResponse = await sendSamplingCompleteNotification(
-      `Reddit action suggestion created: ${actionData.action}. Please read it to the user`,
-    );
-    await updateBlocks();
+    const notificationResponse = await sendSamplingCompleteNotification(message, sessionId);
 
     return JSON.stringify(
       formatToolResponse({
-        message: `Reddit action suggestion created: ${actionData.action}`,
-        result: savedBlock,
-        schema: blockSchema,
+        message: message,
+        result: actionData,
         type: "sampling",
         title: "Suggest Action Callback",
       }),

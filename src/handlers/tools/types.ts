@@ -1,15 +1,15 @@
-import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
-import { RedditService } from "../../services/reddit/reddit-service.js";
-import { SystemPromptService } from "../../services/systemprompt-service.js";
-import { RedditErrorType } from "@/types/reddit.js";
-import { JSONSchema7 } from "json-schema";
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { RedditErrorType } from '@reddit/types/reddit';
+import type { JSONSchema7 } from "json-schema";
 
+import type { RedditService } from '../../services/reddit/reddit-service';
+
+// Context passed to individual tool handlers
 export interface ToolHandlerContext {
   redditService: RedditService;
-  systemPromptService: SystemPromptService;
-  authInfo?: AuthInfo;
-  hasSystemPromptApiKey: boolean;
+  userId: string;
+  sessionId?: string;
+  progressToken?: string | number;
 }
 
 export type ToolHandler<T = any> = (
@@ -83,7 +83,8 @@ export interface FetchRedditContentArgs {
   subreddits?: string;
 }
 
-export interface GetChannelPostsArgs {
+
+export interface GetChannelArgs {
   sort: "hot" | "new" | "controversial";
   subreddit: string;
 }
@@ -132,25 +133,6 @@ export interface CreateRedditCommentArgs {
   id: string;
 }
 
-export interface SendPostArgs {
-  /** ID of the parent post/comment being responded to */
-  id: string;
-  /** Subreddit to post to (without r/ prefix) */
-  subreddit: string;
-  /** Post title (1-300 characters) */
-  title: string;
-  /** Text content for self posts */
-  content?: string;
-  flair_id?: string;
-  /** Flair text if the subreddit requires it */
-  flair_text?: string;
-  /** Whether to send replies to inbox */
-  sendreplies?: boolean;
-  /** Whether to mark as NSFW */
-  nsfw?: boolean;
-  /** Whether to mark as spoiler */
-  spoiler?: boolean;
-}
 
 export interface SearchRedditArgs {
   query: string;
@@ -186,14 +168,6 @@ export interface EditContentArgs {
   content: string;
 }
 
-export interface SendCommentArgs {
-  /** The ID of the post or comment to reply to */
-  id: string;
-  /** The content of the comment */
-  content: string;
-  /** Whether to send replies to inbox */
-  sendreplies?: boolean;
-}
 
 export interface CreateRedditMessageArgs {
   /** The username of the recipient */
@@ -201,14 +175,5 @@ export interface CreateRedditMessageArgs {
   /** The subject of the message */
   subject: string;
   /** The content of the message */
-  content: string;
-}
-
-export interface SendMessageArgs {
-  /** Username of the recipient */
-  recipient: string;
-  /** Subject line of the message (1-100 chars) */
-  subject: string;
-  /** Message content in markdown format (max 10000 chars) */
   content: string;
 }

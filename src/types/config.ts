@@ -1,6 +1,10 @@
 /**
  * Represents a notification from Reddit's inbox
  * Types can include: comment_reply, post_reply, username_mention, etc.
+ * 
+ * @remarks
+ * This type is used in MCP resource handlers to provide Reddit notifications as resources.
+ * @see {@link https://modelcontextprotocol.io/specification/2025-06-18/core/resources | MCP Resources}
  */
 export interface RedditNotification {
   /**

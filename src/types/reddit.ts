@@ -1,66 +1,202 @@
+/**
+ * @file Reddit API type definitions
+ * @module types/reddit
+ * 
+ * @remarks
+ * This module contains type definitions for interacting with the Reddit API.
+ * These types are used throughout the MCP Reddit server to ensure type safety
+ * and provide clear interfaces for Reddit data structures.
+ */
+
+/**
+ * Represents a Reddit post (submission).
+ * 
+ * @remarks
+ * Posts are the primary content type on Reddit. They can be either self/text posts
+ * or link posts that point to external content.
+ * 
+ * @example
+ * ```typescript
+ * const post: RedditPost = {
+ *   id: "abc123",
+ *   title: "Check out this TypeScript MCP server!",
+ *   author: "reddit_user",
+ *   subreddit: "typescript",
+ *   selftext: "I built an MCP server for Reddit...",
+ *   score: 42,
+ *   createdUtc: 1699564800,
+ *   numComments: 15,
+ *   permalink: "/r/typescript/comments/abc123/check_out_this_typescript_mcp_server/"
+ * };
+ * ```
+ */
 export interface RedditPost {
+  /** Unique identifier for the post (without t3_ prefix) */
   id: string;
+  /** Title of the post (max 300 characters) */
   title: string;
+  /** Username of the post author */
   author: string;
+  /** Name of the subreddit (without r/ prefix) */
   subreddit: string;
+  /** Text content for self posts (markdown format) */
   selftext?: string;
+  /** URL for link posts or the post's Reddit URL for self posts */
   url?: string;
+  /** Net upvotes (upvotes - downvotes) */
   score: number;
+  /** Unix timestamp of post creation */
   createdUtc: number;
+  /** Number of comments on the post */
   numComments: number;
+  /** Relative URL path to the post on Reddit */
   permalink: string;
 }
 
+/**
+ * Represents a Reddit comment.
+ * 
+ * @remarks
+ * Comments are replies to posts or other comments. They form threaded discussions
+ * and are a key part of Reddit's community interaction.
+ */
 export interface RedditComment {
+  /** Unique identifier for the comment (without t1_ prefix) */
   id: string;
+  /** Username of the comment author */
   author: string;
+  /** Content of the comment in markdown format */
   body: string;
+  /** Net upvotes (upvotes - downvotes) */
   score: number;
+  /** Unix timestamp of comment creation */
   createdUtc: number;
+  /** Relative URL path to the comment on Reddit */
   permalink: string;
 }
 
+/**
+ * Represents a comment with its nested replies.
+ * 
+ * @remarks
+ * Reddit comments are organized in a tree structure where each comment
+ * can have multiple replies, which can in turn have their own replies.
+ * This creates the threaded discussion format Reddit is known for.
+ */
 export interface RedditCommentThread {
+  /** The comment at this level of the thread */
   comment: RedditComment;
+  /** Array of reply threads to this comment */
   replies: RedditCommentThread[];
 }
 
+/**
+ * Represents a Reddit post with its comment tree.
+ * 
+ * @remarks
+ * This interface combines post data with the full comment thread,
+ * useful for displaying or analyzing complete Reddit discussions.
+ */
 export interface RedditPostWithComments extends RedditPost {
+  /** The complete comment thread for this post */
   comments: RedditCommentThread[];
 }
 
+/**
+ * Represents a Reddit user account.
+ * 
+ * @remarks
+ * Contains basic information about a Reddit user including their karma scores
+ * and account status.
+ */
 export interface RedditUser {
+  /** Username (without u/ prefix) */
   name: string;
+  /** Unix timestamp of account creation */
   createdUtc: number;
+  /** Total karma earned from comments */
   commentKarma: number;
+  /** Total karma earned from posts/links */
   linkKarma: number;
+  /** Whether the user moderates any subreddits */
   isMod: boolean;
 }
 
+/**
+ * Represents a Reddit subreddit (community).
+ * 
+ * @remarks
+ * Subreddits are topic-based communities where users can post content and engage
+ * in discussions. Each subreddit has its own rules, moderators, and culture.
+ * 
+ * @example
+ * ```typescript
+ * const subreddit: RedditSubreddit = {
+ *   displayName: "typescript",
+ *   title: "TypeScript Programming Language",
+ *   publicDescription: "TypeScript is a typed superset of JavaScript...",
+ *   subscribers: 150000,
+ *   createdUtc: 1234567890,
+ *   over18: false,
+ *   allowedPostTypes: ["text", "link"],
+ *   rules: [
+ *     {
+ *       title: "Be respectful",
+ *       description: "Treat everyone with respect..."
+ *     }
+ *   ],
+ *   postRequirements: {
+ *     title: { minLength: 10, maxLength: 300 },
+ *     flairRequired: true
+ *   }
+ * };
+ * ```
+ */
 export interface RedditSubreddit {
+  /** The subreddit name as it appears in URLs (without r/) */
   displayName: string;
+  /** The full title/headline of the subreddit */
   title: string;
+  /** Public description shown in subreddit sidebar */
   publicDescription: string;
+  /** Number of subscribers */
   subscribers: number;
+  /** Unix timestamp of subreddit creation */
   createdUtc: number;
+  /** Whether the subreddit contains adult content */
   over18: boolean;
+  /** Types of posts allowed (e.g., "text", "link", "image", "video") */
   allowedPostTypes: string[];
+  /** Subreddit rules that all posts must follow */
   rules: Array<{
+    /** Short title of the rule */
     title: string;
+    /** Full description of what the rule entails */
     description: string;
   }>;
+  /** Requirements for posting in the subreddit */
   postRequirements: {
+    /** Title requirements */
     title?: {
+      /** Minimum character length for titles */
       minLength?: number;
+      /** Maximum character length for titles */
       maxLength?: number;
+      /** Required title prefixes (e.g., "[Question]", "[Discussion]") */
       allowedPrefixes?: string[];
+      /** Phrases that are not allowed in titles */
       bannedPhrases?: string[];
     };
+    /** Post body requirements */
     body?: {
+      /** Whether a text body is required for posts */
       required?: boolean;
+      /** Minimum character length for post body */
       minLength?: number;
+      /** Maximum character length for post body */
       maxLength?: number;
     };
+    /** Whether posts must have a flair assigned */
     flairRequired?: boolean;
   };
 }
@@ -262,7 +398,7 @@ export class RedditError extends Error {
   constructor(
     message: string,
     public readonly type: RedditErrorType,
-    public readonly cause?: unknown,
+    public readonly cause?: any,
   ) {
     super(message);
     this.name = "RedditError";

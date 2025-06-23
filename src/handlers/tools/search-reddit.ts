@@ -1,7 +1,10 @@
-import { ToolHandler, SearchRedditArgs, formatToolResponse } from "./types.js";
-import { RedditError } from "@/types/reddit.js";
-import { searchRedditSuccessMessage } from "@/constants/tool/search-reddit.js";
-import { JSONSchema7 } from "json-schema";
+
+import { searchRedditSuccessMessage } from '@reddit/constants/tool/search-reddit';
+import { RedditError } from '@reddit/types/reddit';
+import type { JSONSchema7 } from "json-schema";
+
+import { formatToolResponse } from './types';
+import type { ToolHandler, SearchRedditArgs} from './types';
 
 const searchResultSchema: JSONSchema7 = {
   type: "object",

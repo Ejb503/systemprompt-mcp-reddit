@@ -3,7 +3,7 @@ import {
   handleCreateRedditCommentCallback,
   handleAnalyseSubredditCallback,
   handleSuggestActionCallback,
-} from "./callbacks/index.js";
+} from './callbacks/index';
 
 export {
   handleCreateRedditPostCallback,
@@ -16,4 +16,4 @@ export type {
   GeneratedRedditPost,
   GeneratedSubredditAnalysis,
   GeneratedSuggestAction,
-} from "./callbacks/index.js";
+} from './callbacks/index';

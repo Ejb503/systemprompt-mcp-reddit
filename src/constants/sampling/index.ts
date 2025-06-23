@@ -1,14 +1,14 @@
-import { ANALYSE_SUBREDDIT_PROMPT } from "./analyse-subreddit.js";
-import { CREATE_REDDIT_POST_PROMPT } from "./create-post.js";
-import { SUGGEST_ACTION_PROMPT } from "./suggest-action.js";
-import { CREATE_REDDIT_COMMENT_PROMPT } from "./create-comment.js";
-import { CREATE_REDDIT_MESSAGE_PROMPT } from "./create-message.js";
+import { ANALYSE_SUBREDDIT_PROMPT } from './analyse-subreddit';
+import { CREATE_REDDIT_COMMENT_PROMPT } from './create-comment';
+import { CREATE_REDDIT_MESSAGE_PROMPT } from './create-message';
+import { CREATE_REDDIT_POST_PROMPT } from './create-post';
+import { SUGGEST_ACTION_PROMPT } from './suggest-action';
 
-export * from "./analyse-subreddit.js";
-export * from "./create-post.js";
-export * from "./suggest-action.js";
-export * from "./create-comment.js";
-export * from "./create-message.js";
+export * from './analyse-subreddit';
+export * from './create-post';
+export * from './suggest-action';
+export * from './create-comment';
+export * from './create-message';
 
 export const PROMPTS = [
   ANALYSE_SUBREDDIT_PROMPT,

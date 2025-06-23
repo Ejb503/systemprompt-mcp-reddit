@@ -1,5 +1,5 @@
-import { SamplingPrompt } from "@/types/sampling.js";
-import { REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA } from "@/types/sampling-schemas.js";
+import { REDDIT_SUGGEST_ACTION_RESPONSE_SCHEMA } from '@reddit/types/sampling-schemas';
+import type { SamplingPrompt } from '@reddit/types/sampling';
 
 export const SUGGEST_ACTION_PROMPT: SamplingPrompt = {
   name: "reddit_suggest_action",

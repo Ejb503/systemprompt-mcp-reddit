@@ -1,9 +1,6 @@
 import { CreateMessageResult } from "@modelcontextprotocol/sdk/types.js";
-import { SystemPromptService } from "../../services/systemprompt-service.js";
-import { SystempromptBlockRequest } from "@/types/systemprompt.js";
-import { sendSamplingCompleteNotification, updateBlocks } from "../notifications.js";
-import { formatToolResponse } from "../tools/types.js";
-import { JSONSchema7 } from "json-schema";
+import { sendSamplingCompleteNotification } from "../notifications";
+import { formatToolResponse } from "../tools/types";
 
 // Interface for subreddit analysis response
 export interface GeneratedSubredditAnalysis {
@@ -15,30 +12,10 @@ export interface GeneratedSubredditAnalysis {
     action: string;
     reason: string;
   }>;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
-const blockSchema: JSONSchema7 = {
-  type: "object",
-  properties: {
-    id: { type: "string" },
-    content: { type: "string" },
-    type: { type: "string" },
-    prefix: { type: "string" },
-    metadata: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        description: { type: "string" },
-        tag: { type: "array", items: { type: "string" } },
-      },
-      required: ["title", "description", "tag"],
-    },
-  },
-  required: ["id", "content", "type", "prefix", "metadata"],
-};
-
-function isTextContent(content: unknown): content is { type: "text"; text: string } {
+function isTextContent(content: any): content is { type: "text"; text: string } {
   return (
     typeof content === "object" &&
     content !== null &&
@@ -49,9 +26,10 @@ function isTextContent(content: unknown): content is { type: "text"; text: strin
   );
 }
 
-export async function handleAnalyseSubredditCallback(result: CreateMessageResult): Promise<void> {
-  const systemPromptService = SystemPromptService.getInstance();
-
+export async function handleAnalyseSubredditCallback(
+  result: CreateMessageResult,
+  sessionId: string,
+): Promise<void> {
   try {
     if (!isTextContent(result.content)) {
       throw new Error("Invalid content format received from LLM");
@@ -69,31 +47,15 @@ export async function handleAnalyseSubredditCallback(result: CreateMessageResult
       throw new Error("Invalid analysis data: missing required fields");
     }
 
-    // Create a block to store the subreddit analysis
-    const analysisBlock: SystempromptBlockRequest = {
-      content: JSON.stringify(analysisData),
-      type: "block",
-      prefix: "reddit_subreddit_analysis",
-      metadata: {
-        title: `Analysis of r/${analysisData.subreddit}`,
-        description: `Generated analysis for r/${analysisData.subreddit}`,
-        tag: ["mcp_systemprompt_reddit"],
-      },
-    };
-
-    // Create new block
-    const savedBlock = await systemPromptService.createBlock(analysisBlock);
-    const message = `Reddit analysis created for r/${analysisData.subreddit}. Please read it to the user`;
+    const message = `Reddit analysis generated for r/${analysisData.subreddit}`;
 
     const notificationResponse = formatToolResponse({
       message: message,
-      result: savedBlock,
-      schema: blockSchema,
+      result: analysisData,
       type: "sampling",
       title: "Analyse Subreddit Callback",
     });
-    await sendSamplingCompleteNotification(JSON.stringify(notificationResponse));
-    await updateBlocks();
+    await sendSamplingCompleteNotification(JSON.stringify(notificationResponse), sessionId);
   } catch (error) {
     throw error;
   }

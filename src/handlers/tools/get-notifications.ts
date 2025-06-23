@@ -1,7 +1,10 @@
-import { ToolHandler, GetNotificationsArgs, formatToolResponse } from "./types.js";
-import { RedditError } from "@/types/reddit.js";
-import { getRedditNotificationsSuccessMessage } from "@/constants/tool/get-notifications.js";
-import { JSONSchema7 } from "json-schema";
+
+import { getRedditNotificationsSuccessMessage } from '@reddit/constants/tool/get-notifications';
+import { RedditError } from '@reddit/types/reddit';
+import type { JSONSchema7 } from "json-schema";
+
+import { formatToolResponse } from './types';
+import type { ToolHandler, GetNotificationsArgs} from './types';
 
 const notificationSchema: JSONSchema7 = {
   type: "object",

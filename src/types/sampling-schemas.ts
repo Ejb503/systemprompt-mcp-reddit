@@ -1,5 +1,39 @@
-import { JSONSchema7 } from "json-schema";
+/**
+ * @file JSON Schema definitions for Reddit MCP sampling responses
+ * @module types/sampling-schemas
+ * 
+ * @remarks
+ * This module defines JSON Schema structures used for validating LLM responses
+ * in the MCP sampling feature. These schemas ensure that AI-generated content
+ * matches the expected format for Reddit operations.
+ * 
+ * @see {@link https://modelcontextprotocol.io/specification/2025-06-18/client/sampling#structured-output | MCP Structured Output}
+ * @see {@link https://json-schema.org/ | JSON Schema Specification}
+ */
 
+import type { JSONSchema7 } from "json-schema";
+
+/**
+ * JSON Schema for validating Reddit post creation responses from LLM sampling.
+ * 
+ * @remarks
+ * This schema ensures that AI-generated posts have all required fields
+ * and follow Reddit's posting requirements. The LLM response will be
+ * validated against this schema before attempting to create the post.
+ * 
+ * @example
+ * ```json
+ * {
+ *   "title": "TIL about MCP servers for Reddit",
+ *   "content": "I discovered this amazing way to interact with Reddit...",
+ *   "subreddit": "todayilearned",
+ *   "flair_text": "Technology",
+ *   "sendreplies": true
+ * }
+ * ```
+ * 
+ * @see {@link https://modelcontextprotocol.io/specification/2025-06-18/client/sampling#structured-output | MCP Structured Output}
+ */
 export const REDDIT_POST_RESPONSE_SCHEMA: JSONSchema7 = {
   type: "object",
   properties: {
@@ -157,13 +191,3 @@ export const REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA: JSONSchema7 = {
   required: ["subreddit", "summary", "trendingTopics", "sentiment", "recommendedActions"],
 };
 
-export const REDDIT_INSTRUCTIONS_RESPONSE_SCHEMA: JSONSchema7 = {
-  type: "object",
-  properties: {
-    content: {
-      type: "string",
-      description: "Instructions for content generation and interaction with Reddit",
-    },
-  },
-  required: ["content"],
-};

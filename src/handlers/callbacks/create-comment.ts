@@ -1,39 +1,21 @@
-import { CreateMessageResult } from "@modelcontextprotocol/sdk/types.js";
-import { SystemPromptService } from "../../services/systemprompt-service.js";
-import { SystempromptBlockRequest } from "@/types/systemprompt.js";
-import { sendSamplingCompleteNotification, updateBlocks } from "../notifications.js";
-import { formatToolResponse } from "../tools/types.js";
-import { JSONSchema7 } from "json-schema";
+import type { CreateMessageResult } from '@modelcontextprotocol/sdk/types.js';
+import { RedditService } from '@reddit/services/reddit/reddit-service';
+import { authStore } from '@reddit/server/auth-store';
+import { logger } from '@/utils/logger';
+import { RedditError } from '@reddit/types/reddit';
+
+import { sendSamplingCompleteNotification } from '../notifications';
+import { formatToolResponse } from '../tools/types';
 
 // LLM-generated comment content (different from API response)
 export interface GeneratedRedditComment {
   content: string;
   id: string;
   subreddit: string;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
-const blockSchema: JSONSchema7 = {
-  type: "object",
-  properties: {
-    id: { type: "string" },
-    content: { type: "string" },
-    type: { type: "string" },
-    prefix: { type: "string" },
-    metadata: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        description: { type: "string" },
-        tag: { type: "array", items: { type: "string" } },
-      },
-      required: ["title", "description", "tag"],
-    },
-  },
-  required: ["id", "content", "type", "prefix", "metadata"],
-};
-
-function isTextContent(content: unknown): content is { type: "text"; text: string } {
+function isTextContent(content: any): content is { type: "text"; text: string } {
   return (
     typeof content === "object" &&
     content !== null &&
@@ -46,9 +28,8 @@ function isTextContent(content: unknown): content is { type: "text"; text: strin
 
 export async function handleCreateRedditCommentCallback(
   result: CreateMessageResult,
+  sessionId: string,
 ): Promise<void> {
-  const systemPromptService = SystemPromptService.getInstance();
-
   try {
     if (!isTextContent(result.content)) {
       throw new Error("Invalid content format received from LLM");
@@ -60,31 +41,79 @@ export async function handleCreateRedditCommentCallback(
       throw new Error("Invalid comment data: missing required fields (content, id, or subreddit)");
     }
 
-    const commentBlock: SystempromptBlockRequest = {
-      content: JSON.stringify(commentData),
-      type: "block",
-      prefix: "reddit_comment",
-      metadata: {
-        title: `Reddit Comment in r/${commentData.subreddit}`,
-        description: `Generated Reddit comment content for parent ${commentData.id} in r/${commentData.subreddit}`,
-        tag: ["mcp_systemprompt_reddit"],
-      },
-    };
+    // Get auth info from the auth store
+    const authInfo = authStore.getAuth(sessionId);
+    if (!authInfo) {
+      throw new Error(`Auth info not found for session: ${sessionId}`);
+    }
 
-    const savedBlock = await systemPromptService.createBlock(commentBlock);
-    const message = `Reddit comment created for parent ${commentData.id} in r/${commentData.subreddit}. Please read it to the user`;
+    if (!authInfo.extra?.redditAccessToken || !authInfo.extra?.redditRefreshToken) {
+      throw new Error("Reddit authentication tokens not found");
+    }
 
-    const notificationResponse = formatToolResponse({
-      message: message,
-      result: savedBlock,
-      schema: blockSchema,
-      type: "sampling",
-      title: "Create Reddit Comment Callback",
+    // Create Reddit service instance
+    const redditService = new RedditService({
+      accessToken: authInfo.extra.redditAccessToken,
+      refreshToken: authInfo.extra.redditRefreshToken,
     });
 
-    await sendSamplingCompleteNotification(JSON.stringify(notificationResponse));
-    await updateBlocks();
+    let commentResponse;
+    try {
+      // Post the comment to Reddit
+      commentResponse = await redditService.sendComment({
+        id: commentData.id,
+        text: commentData.content,
+        sendreplies: true,
+      });
+
+      logger.info("Successfully posted comment to Reddit", {
+        commentId: commentResponse.id,
+        parentId: commentData.id,
+        subreddit: commentData.subreddit,
+      });
+    } catch (error) {
+      logger.error("Failed to post comment to Reddit", {
+        error: error instanceof Error ? error.message : String(error),
+        parentId: commentData.id,
+        subreddit: commentData.subreddit,
+      });
+
+      // Send error notification
+      const errorResponse = formatToolResponse({
+        status: "error",
+        message: `Failed to post comment: ${error instanceof Error ? error.message : "Unknown error"}`,
+        error: {
+          type: error instanceof RedditError ? error.type : "API_ERROR",
+          details: error,
+        },
+        type: "sampling",
+        title: "Error Posting Comment",
+      });
+
+      await sendSamplingCompleteNotification(JSON.stringify(errorResponse), sessionId);
+      return;
+    }
+
+    // Send success notification with Reddit response
+    const notificationResponse = formatToolResponse({
+      message: `Comment successfully posted to r/${commentData.subreddit}`,
+      result: {
+        id: commentResponse.id,
+        content: commentResponse.text || commentData.content,
+        permalink: commentResponse.permalink,
+        parentId: commentData.id,
+        subreddit: commentData.subreddit,
+      },
+      type: "sampling",
+      title: "Comment Posted Successfully",
+    });
+
+    await sendSamplingCompleteNotification(JSON.stringify(notificationResponse), sessionId);
   } catch (error) {
+    logger.error("Error in handleCreateRedditCommentCallback", {
+      error: error instanceof Error ? error.message : String(error),
+      sessionId,
+    });
     throw error;
   }
 }

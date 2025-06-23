@@ -1,4 +1,4 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 
 export const createPost: Tool = {
   name: "create_post",

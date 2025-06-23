@@ -1,19 +1,90 @@
-import { RedditServiceConfig, RedditError } from "@/types/reddit.js";
+/**
+ * @file Reddit authentication service
+ * @module services/reddit/reddit-auth-service
+ * 
+ * @remarks
+ * This service handles OAuth2 authentication for the Reddit API.
+ * It manages access tokens, automatic token refresh, and provides
+ * authenticated headers for API requests.
+ * 
+ * The service uses the refresh token grant type to obtain access tokens
+ * without requiring user interaction after initial authorization.
+ * 
+ * @see {@link https://github.com/reddit-archive/reddit/wiki/OAuth2} Reddit OAuth2 Documentation
+ */
 
+import type { RedditServiceConfig} from '@reddit/types/reddit';
+import { RedditError } from '@reddit/types/reddit';
+
+/**
+ * Service for managing Reddit API authentication
+ * 
+ * @remarks
+ * This service handles:
+ * - OAuth2 token management with automatic refresh
+ * - User agent construction per Reddit API requirements
+ * - Authenticated header generation for API requests
+ * - User information and preferences fetching
+ * 
+ * @example
+ * ```typescript
+ * const authService = new RedditAuthService({
+ *   clientId: 'your-client-id',
+ *   clientSecret: 'your-client-secret',
+ *   refreshToken: 'your-refresh-token',
+ *   appName: 'MyApp',
+ *   appVersion: '1.0.0',
+ *   username: 'mybot'
+ * });
+ * 
+ * await authService.initialize();
+ * const headers = await authService.getAuthHeaders();
+ * ```
+ */
 export class RedditAuthService {
   private readonly tokenEndpoint = "https://www.reddit.com/api/v1/access_token";
   private readonly userAgent: string;
   private accessToken: string | null = null;
   private tokenExpiresAt: number | null = null;
 
+  /**
+   * Creates a new Reddit authentication service
+   * 
+   * @param config - Reddit service configuration
+   * @param config.clientId - OAuth2 client ID from Reddit app registration
+   * @param config.clientSecret - OAuth2 client secret
+   * @param config.refreshToken - Long-lived refresh token
+   * @param config.appName - Application name for user agent
+   * @param config.appVersion - Application version for user agent
+   * @param config.username - Reddit username for user agent
+   */
   constructor(private readonly config: RedditServiceConfig) {
-    this.userAgent = `${config.appName}/${config.appVersion} by ${config.username}`;
+    this.userAgent = `${config.appName}/${config.appVersion} by /u/${config.username}`;
   }
 
+  /**
+   * Initializes the authentication service by obtaining an access token
+   * 
+   * @remarks
+   * This method must be called before making any API requests.
+   * It will obtain a fresh access token using the refresh token.
+   * 
+   * @throws {RedditError} Thrown if token refresh fails
+   */
   public async initialize(): Promise<void> {
     await this.refreshAccessToken();
   }
 
+  /**
+   * Manually sets an access token (used for OAuth2 flow)
+   * 
+   * @param token - The OAuth2 access token
+   * @param expiresInSeconds - Token expiration time in seconds (defaults to 3600)
+   * 
+   * @remarks
+   * This method is typically used when tokens are obtained through
+   * the OAuth2 authorization code flow rather than refresh token flow.
+   */
   public setAccessToken(token: string, expiresInSeconds?: number): void {
     this.accessToken = token;
     this.tokenExpiresAt = expiresInSeconds
@@ -21,7 +92,19 @@ export class RedditAuthService {
       : Date.now() + 3600 * 1000; // Default to 1 hour
   }
 
-  public async getAuthHeaders(): Promise<HeadersInit> {
+  /**
+   * Gets the authentication headers required for Reddit API requests
+   * 
+   * @returns Headers object with Authorization, User-Agent, and Accept headers
+   * @throws {RedditError} Thrown if unable to obtain access token
+   * 
+   * @example
+   * ```typescript
+   * const headers = await authService.getAuthHeaders();
+   * const response = await fetch('https://oauth.reddit.com/api/v1/me', { headers });
+   * ```
+   */
+  public async getAuthHeaders(): Promise<Record<string, string>> {
     const token = await this.getAccessToken();
     return {
       Authorization: `Bearer ${token}`,
@@ -30,6 +113,16 @@ export class RedditAuthService {
     };
   }
 
+  /**
+   * Gets the current access token, refreshing if necessary
+   * 
+   * @returns The valid OAuth2 access token
+   * @throws {RedditError} Thrown if unable to obtain or refresh token
+   * 
+   * @remarks
+   * This method automatically handles token expiration and refresh.
+   * Tokens are refreshed if they are expired or about to expire.
+   */
   public async getAccessToken(): Promise<string> {
     if (!this.accessToken || this.isTokenExpired()) {
       await this.refreshAccessToken();
@@ -37,6 +130,19 @@ export class RedditAuthService {
     return this.accessToken!;
   }
 
+  /**
+   * Fetches information about the authenticated user
+   * 
+   * @returns User information including karma, account age, and status
+   * @throws {RedditError} Thrown if API request fails
+   * 
+   * @example
+   * ```typescript
+   * const userInfo = await authService.fetchUserInfo();
+   * console.log(`Username: ${userInfo.name}`);
+   * console.log(`Total karma: ${userInfo.link_karma + userInfo.comment_karma}`);
+   * ```
+   */
   public async fetchUserInfo() {
     const token = await this.getAccessToken();
     const response = await fetch("https://oauth.reddit.com/api/v1/me", {
@@ -50,7 +156,7 @@ export class RedditAuthService {
       throw new RedditError(`Failed to fetch user info: ${response.statusText}`, "API_ERROR");
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
     return {
       id: data.id,
       name: data.name,
@@ -63,6 +169,19 @@ export class RedditAuthService {
     };
   }
 
+  /**
+   * Fetches the authenticated user's preferences
+   * 
+   * @returns User preferences including notification settings, content filters, and UI preferences
+   * @throws {RedditError} Thrown if API request fails
+   * 
+   * @example
+   * ```typescript
+   * const prefs = await authService.fetchUserPreferences();
+   * console.log(`NSFW content enabled: ${prefs.show_nsfw}`);
+   * console.log(`Theme: ${prefs.theme}`);
+   * ```
+   */
   public async fetchUserPreferences() {
     const token = await this.getAccessToken();
     const response = await fetch("https://oauth.reddit.com/api/v1/me/prefs", {
@@ -79,7 +198,7 @@ export class RedditAuthService {
       );
     }
 
-    const prefs = await response.json();
+    const prefs: any = await response.json();
     return {
       enable_notifications: prefs.enable_notifications ?? true,
       show_nsfw: prefs.over_18 ?? false,
@@ -89,11 +208,30 @@ export class RedditAuthService {
     };
   }
 
+  /**
+   * Checks if the current access token is expired
+   * 
+   * @returns True if token is expired or expiration time is unknown
+   * @internal
+   */
   private isTokenExpired(): boolean {
     return !this.tokenExpiresAt || Date.now() >= this.tokenExpiresAt;
   }
 
-  private async refreshAccessToken(): Promise<void> {
+  /**
+   * Refreshes the access token using the refresh token
+   * 
+   * @throws {RedditError} Thrown if token refresh fails
+   * 
+   * @remarks
+   * This method uses the OAuth2 refresh token grant type to obtain
+   * a new access token. The refresh token itself never expires but
+   * can be revoked by the user.
+   * 
+   * @see {@link https://github.com/reddit-archive/reddit/wiki/OAuth2#refreshing-the-token} Reddit Token Refresh Documentation
+   * @internal
+   */
+  public async refreshAccessToken(): Promise<void> {
     const auth = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString(
       "base64",
     );
@@ -112,7 +250,7 @@ export class RedditAuthService {
       throw new RedditError(`Failed to refresh access token: ${response.statusText}`, "AUTH_ERROR");
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
     this.accessToken = data.access_token;
     this.tokenExpiresAt = Date.now() + data.expires_in * 1000;
   }

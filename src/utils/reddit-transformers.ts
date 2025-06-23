@@ -1,22 +1,36 @@
-import {
+/**
+ * @file Reddit API response transformation utilities
+ * @module utils/reddit-transformers
+ * 
+ * @remarks
+ * This module provides utilities for transforming raw Reddit API responses
+ * into strongly-typed TypeScript objects. It handles data normalization,
+ * type conversion, and provides type guards for runtime validation.
+ * 
+ * The Reddit API returns data in various formats with inconsistent types
+ * (e.g., numbers as strings). These transformers ensure consistent, type-safe
+ * data structures throughout the application.
+ * 
+ * @see {@link https://www.reddit.com/dev/api/} Reddit API Documentation
+ */
+
+import type {
+  RedditNotification as ConfigRedditNotification,
+  RedditMessage,
+} from '@reddit/types/config';
+import type {
   RedditPost,
   RedditComment,
   RedditSubreddit,
   RedditNotification as ApiRedditNotification,
   SubscribedSubreddit,
-} from "@/types/reddit.js";
-import type {
-  RedditNotification as ConfigRedditNotification,
-  RedditMessage,
-} from "@/types/config.js";
+} from '@reddit/types/reddit';
 
 /**
- * Type guards and transformation utilities for Reddit API responses
+ * Raw post data structure from Reddit API
+ * @internal
  */
-
-export const isRedditPostData = (
-  data: unknown,
-): data is {
+interface RedditApiPostData {
   id: string;
   title: string;
   author: string;
@@ -27,7 +41,101 @@ export const isRedditPostData = (
   created_utc: number | string;
   num_comments: number | string;
   permalink: string;
-} => {
+  [key: string]: unknown;
+}
+
+/**
+ * Raw comment data structure from Reddit API
+ * @internal
+ */
+interface RedditApiCommentData {
+  id: string;
+  body: string;
+  author: string;
+  subreddit: string;
+  score: number | string;
+  created_utc: number | string;
+  permalink: string;
+  parent_id: string;
+  link_id: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Raw subreddit data structure from Reddit API
+ * @internal
+ */
+interface RedditApiSubredditData {
+  display_name: string;
+  title: string;
+  description?: string;
+  subscribers?: number | string;
+  public_description?: string;
+  submission_type: string;
+  subreddit_type: string;
+  created_utc: number | string;
+  over18: boolean;
+  rules?: Array<{
+    short_name?: string;
+    title: string;
+    description: string;
+  }>;
+  title_min_length?: number;
+  title_max_length?: number;
+  allowed_title_prefixes?: string[];
+  banned_title_phrases?: string[];
+  body_required?: boolean;
+  body_min_length?: number;
+  body_max_length?: number;
+  flair_required?: boolean;
+  [key: string]: unknown;
+}
+
+/**
+ * Raw notification data structure from Reddit API
+ * @internal
+ */
+interface RedditApiNotificationData {
+  id: string;
+  subject: string;
+  body: string;
+  author: string;
+  created_utc: number | string;
+  new: boolean;
+  [key: string]: unknown;
+}
+
+/**
+ * Raw message data structure from Reddit API
+ * @internal
+ */
+interface RedditApiMessageData {
+  id: string;
+  subject: string;
+  body: string;
+  author: string;
+  dest: string;
+  created_utc: number | string;
+  new: boolean;
+  [key: string]: unknown;
+}
+
+/**
+ * Type guard to check if data is a valid Reddit post
+ * 
+ * @param data - Unknown data to validate
+ * @returns True if data matches Reddit post structure
+ * 
+ * @example
+ * ```typescript
+ * if (isRedditPostData(response)) {
+ *   console.log(response.title); // Type-safe access
+ * }
+ * ```
+ */
+export const isRedditPostData = (
+  data: unknown,
+): data is RedditApiPostData => {
   const post = data as Record<string, unknown>;
   return (
     typeof post?.id === "string" &&
@@ -38,6 +146,26 @@ export const isRedditPostData = (
   );
 };
 
+/**
+ * Transforms raw Reddit API post data into a typed RedditPost object
+ * 
+ * @param data - Raw post data from Reddit API
+ * @returns Normalized RedditPost object
+ * @throws {Error} Thrown if data doesn't match expected structure
+ * 
+ * @remarks
+ * This function normalizes Reddit API responses by:
+ * - Converting string numbers to actual numbers
+ * - Handling optional fields safely
+ * - Validating required fields
+ * 
+ * @example
+ * ```typescript
+ * const rawPost = await fetch('/api/post.json');
+ * const post = transformPost(rawPost.data);
+ * console.log(post.score); // Guaranteed to be a number
+ * ```
+ */
 export const transformPost = (data: unknown): RedditPost => {
   if (!isRedditPostData(data)) {
     throw new Error("Invalid post data received from Reddit API");
@@ -57,16 +185,15 @@ export const transformPost = (data: unknown): RedditPost => {
   };
 };
 
+/**
+ * Type guard to check if data is a valid Reddit comment
+ * 
+ * @param data - Unknown data to validate
+ * @returns True if data matches Reddit comment structure
+ */
 export const isRedditCommentData = (
   data: unknown,
-): data is {
-  id: string;
-  author: string;
-  body: string;
-  score: number | string;
-  created_utc: number | string;
-  permalink: string;
-} => {
+): data is RedditApiCommentData => {
   const comment = data as Record<string, unknown>;
   return (
     typeof comment?.id === "string" &&
@@ -76,6 +203,13 @@ export const isRedditCommentData = (
   );
 };
 
+/**
+ * Transforms raw Reddit API comment data into a typed RedditComment object
+ * 
+ * @param data - Raw comment data from Reddit API
+ * @returns Normalized RedditComment object
+ * @throws {Error} Thrown if data doesn't match expected structure
+ */
 export const transformComment = (data: unknown): RedditComment => {
   if (!isRedditCommentData(data)) {
     throw new Error("Invalid comment data received from Reddit API");
@@ -91,30 +225,15 @@ export const transformComment = (data: unknown): RedditComment => {
   };
 };
 
+/**
+ * Type guard to check if data is a valid Reddit subreddit
+ * 
+ * @param data - Unknown data to validate
+ * @returns True if data matches Reddit subreddit structure
+ */
 export const isRedditSubredditData = (
   data: unknown,
-): data is {
-  display_name: string;
-  title: string;
-  public_description: string;
-  subscribers: number | string;
-  created_utc: number | string;
-  over18: boolean;
-  rules?: Array<{
-    short_name?: string;
-    title: string;
-    description: string;
-  }>;
-  title_min_length?: number;
-  title_max_length?: number;
-  allowed_title_prefixes?: string[];
-  banned_title_phrases?: string[];
-  body_required?: boolean;
-  body_min_length?: number;
-  body_max_length?: number;
-  flair_required?: boolean;
-  [key: string]: unknown;
-} => {
+): data is RedditApiSubredditData => {
   const subreddit = data as Record<string, unknown>;
   return (
     typeof subreddit?.display_name === "string" &&
@@ -123,6 +242,20 @@ export const isRedditSubredditData = (
   );
 };
 
+/**
+ * Transforms raw Reddit API subreddit data into a typed RedditSubreddit object
+ * 
+ * @param data - Raw subreddit data from Reddit API
+ * @returns Normalized RedditSubreddit object with rules and requirements
+ * @throws {Error} Thrown if data doesn't match expected structure
+ * 
+ * @remarks
+ * This function extracts and normalizes:
+ * - Basic subreddit information
+ * - Posting rules and requirements
+ * - Title and body constraints
+ * - Allowed post types based on submission_type
+ */
 export const transformSubreddit = (data: unknown): RedditSubreddit => {
   if (!isRedditSubredditData(data)) {
     throw new Error("Invalid subreddit data received from Reddit API");
@@ -133,7 +266,7 @@ export const transformSubreddit = (data: unknown): RedditSubreddit => {
   return {
     displayName: data.display_name,
     title: data.title,
-    publicDescription: data.public_description,
+    publicDescription: data.public_description || '',
     subscribers: Number(data.subscribers),
     createdUtc: Number(data.created_utc),
     over18: Boolean(data.over18),
@@ -163,63 +296,98 @@ export const transformSubreddit = (data: unknown): RedditSubreddit => {
   };
 };
 
-export const transformNotification = (data: Record<string, unknown>): ApiRedditNotification => {
+/**
+ * Transforms raw Reddit API notification data into a typed notification object
+ * 
+ * @param data - Raw notification data from Reddit API
+ * @returns Normalized notification object with proper type classification
+ * 
+ * @remarks
+ * This function determines the notification type based on various indicators:
+ * - was_comment field indicates comment/post replies
+ * - parent_id prefix (t3_ for posts, t1_ for comments)
+ * - subject field for messages and mentions
+ * - Handles deleted authors and missing fields gracefully
+ */
+export const transformNotification = (data: unknown): ApiRedditNotification => {
+  const notification = data as RedditApiNotificationData;
   // Determine notification type and subject
   let type: ApiRedditNotification["type"] = "other";
-  let subject = String(data.subject || "");
+  let subject = String(notification.subject || "");
 
   // For comment replies, we need to check link_title to determine if it's a post or comment reply
-  if (data.was_comment) {
-    const id = String(data.parent_id || "");
+  if ((notification as any).was_comment) {
+    const id = String((notification as any).parent_id || "");
     if (id.startsWith("t3_")) {
       type = "post_reply";
       // For post replies, use the post title as subject
-      subject = String(data.link_title || "Comment on your post");
+      subject = String((notification as any).link_title || "Comment on your post");
     } else {
       type = "comment_reply";
       // For comment replies, use a descriptive subject
       subject = "Reply to your comment";
     }
-  } else if (data.subject === "username mention") {
+  } else if (notification.subject === "username mention") {
     type = "username_mention";
     subject = "Username mention";
-  } else if (data.subject && !data.was_comment) {
+  } else if (notification.subject && !(notification as any).was_comment) {
     type = "message";
     // For messages, use the original subject
-    subject = String(data.subject);
+    subject = String(notification.subject);
   }
 
   return {
-    id: String(data.name || ""), // name contains the full ID with prefix
-    name: String(data.name || ""),
+    id: String((notification as any).name || ""), // name contains the full ID with prefix
+    name: String((notification as any).name || ""),
     type,
     subject,
-    body: String(data.body || ""),
-    createdUtc: Number(data.created_utc || 0),
-    date: data.date instanceof Date ? data.date : new Date(),
-    author: String(data.author || "[deleted]"),
-    subreddit: typeof data.subreddit === "string" ? data.subreddit : undefined,
-    context: typeof data.context === "string" ? data.context : undefined,
-    parentId: typeof data.parent_id === "string" ? data.parent_id : undefined,
-    isNew: Boolean(data.new),
+    body: String(notification.body || ""),
+    createdUtc: Number(notification.created_utc || 0),
+    date: (notification as any).date instanceof Date ? (notification as any).date : new Date(),
+    author: String(notification.author || "[deleted]"),
+    subreddit: typeof (notification as any).subreddit === "string" ? (notification as any).subreddit : undefined,
+    context: typeof (notification as any).context === "string" ? (notification as any).context : undefined,
+    parentId: typeof (notification as any).parent_id === "string" ? (notification as any).parent_id : undefined,
+    isNew: Boolean(notification.new),
     permalink:
-      typeof data.permalink === "string" ? data.permalink : (data.context as string | undefined),
+      typeof (notification as any).permalink === "string" ? (notification as any).permalink : ((notification as any).context as string | undefined),
   };
 };
 
-export const transformMessage = (data: Record<string, unknown>): RedditMessage => {
+/**
+ * Transforms raw Reddit API message data into a typed RedditMessage object
+ * 
+ * @param data - Raw message data from Reddit API
+ * @returns Normalized RedditMessage object
+ * 
+ * @remarks
+ * Handles private messages with proper field mapping and default values
+ */
+export const transformMessage = (data: unknown): RedditMessage => {
+  const message = data as RedditApiMessageData;
   return {
-    id: String(data.name || ""),
+    id: String((message as any).name || ""),
     type: "message",
-    subject: String(data.subject || ""),
-    parent_id: String(data.parent_id || data.name || ""),
-    author: String(data.author || "[deleted]"),
-    body: String(data.body || ""),
-    created_utc: Number(data.created_utc || 0),
-    unread: Boolean(data.new),
+    subject: String(message.subject || ""),
+    parent_id: String((message as any).parent_id || (message as any).name || ""),
+    author: String(message.author || "[deleted]"),
+    body: String(message.body || ""),
+    created_utc: Number(message.created_utc || 0),
+    unread: Boolean(message.new),
   };
 };
 
+/**
+ * Converts an API notification to the config notification format
+ * 
+ * @param notification - API notification object
+ * @returns Config-formatted notification or message
+ * 
+ * @remarks
+ * This function bridges the gap between Reddit API format and the
+ * MCP server's internal config format, handling both messages and
+ * notifications with appropriate field mapping.
+ */
 export function transformToConfigNotification(
   notification: ApiRedditNotification,
 ): ConfigRedditNotification | RedditMessage {
@@ -250,19 +418,44 @@ export function transformToConfigNotification(
   };
 }
 
-const extractAllowedPostTypes = (data: any): string[] => {
+/**
+ * Extracts allowed post types from subreddit submission_type field
+ * 
+ * @param data - Raw subreddit data
+ * @returns Array of allowed post types
+ * 
+ * @remarks
+ * Reddit's submission_type field can be:
+ * - "any": Both text and link posts allowed
+ * - "self": Only text posts allowed
+ * - "link": Only link posts allowed
+ * 
+ * @internal
+ */
+const extractAllowedPostTypes = (data: unknown): string[] => {
   const types: string[] = [];
+  const subredditData = data as Record<string, unknown>;
 
-  if (data.submission_type === "any" || data.submission_type === "self") {
+  if (subredditData.submission_type === "any" || subredditData.submission_type === "self") {
     types.push("text");
   }
-  if (data.submission_type === "any" || data.submission_type === "link") {
+  if (subredditData.submission_type === "any" || subredditData.submission_type === "link") {
     types.push("link");
   }
 
   return types.length > 0 ? types : ["text", "link"];
 };
 
+/**
+ * Type guard to check if data is a valid subscribed subreddit
+ * 
+ * @param data - Unknown data to validate
+ * @returns True if data matches subscribed subreddit structure
+ * 
+ * @remarks
+ * This guard is more strict than general subreddit data as it validates
+ * fields that are guaranteed to be present for subscribed subreddits.
+ */
 export const isSubscribedSubredditData = (
   data: unknown,
 ): data is {
@@ -293,6 +486,20 @@ export const isSubscribedSubredditData = (
   );
 };
 
+/**
+ * Transforms raw Reddit API subscribed subreddit data into a typed object
+ * 
+ * @param data - Raw subscribed subreddit data from Reddit API
+ * @returns Normalized SubscribedSubreddit object
+ * @throws {Error} Thrown if data doesn't match expected structure
+ * 
+ * @example
+ * ```typescript
+ * const subData = await fetch('/subreddits/mine/subscriber.json');
+ * const subreddit = transformSubscribedSubreddit(subData.data);
+ * console.log(`Subscribed to: ${subreddit.displayName}`);
+ * ```
+ */
 export const transformSubscribedSubreddit = (data: unknown): SubscribedSubreddit => {
   if (!isSubscribedSubredditData(data)) {
     throw new Error("Invalid subscribed subreddit data received from Reddit API");

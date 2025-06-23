@@ -1,5 +1,5 @@
-import { SamplingPrompt } from "@/types/sampling.js";
-import { REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA } from "@/types/sampling-schemas.js";
+import { REDDIT_ANALYSE_SUBREDDIT_RESPONSE_SCHEMA } from '@reddit/types/sampling-schemas';
+import type { SamplingPrompt } from '@reddit/types/sampling';
 
 export const ANALYSE_SUBREDDIT_PROMPT: SamplingPrompt = {
   name: "reddit_analyse_subreddit",
