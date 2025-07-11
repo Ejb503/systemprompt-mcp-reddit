@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ejb503-systemprompt-mcp-reddit-badge.png)](https://mseep.ai/app/ejb503-systemprompt-mcp-reddit)
+
 # systemprompt-mcp-reddit
 
 [![npm version](https://img.shields.io/npm/v/systemprompt-mcp-reddit.svg)](https://www.npmjs.com/package/systemprompt-mcp-reddit)
